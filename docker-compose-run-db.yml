@@ -1,0 +1,320 @@
+#  Базы данных для сервисов, после их запуска в docker
+#  для подключения конкретно к ним (может хотите к локальной БД подключаться)
+#  должны соответствовать данным в файл src->main->resources->application.yml к примеру так:
+#  url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5435}/habitServiceDB
+#  username: root
+#  password: root
+
+services:
+  auth-service-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${AUTH_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_SERVICE_DB_NAME}
+    ports:
+      - "${AUTH_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${AUTH_SERVICE_DB_USER}", "-d", "${AUTH_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  auth-service-metrics-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${AUTH_SERVICE_METRICS_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_SERVICE_METRICS_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_SERVICE_METRICS_DB_NAME}
+    ports:
+      - "${AUTH_SERVICE_METRICS_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${AUTH_SERVICE_METRICS_DB_USER}", "-d", "${AUTH_SERVICE_METRICS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  task-service-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${TASK_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${TASK_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${TASK_SERVICE_DB_NAME}
+    ports:
+      - "${TASK_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${TASK_SERVICE_DB_USER}", "-d", "${TASK_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  task-service-metrics-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${TASK_SERVICE_METRICS_DB_USER}
+      POSTGRES_PASSWORD: ${TASK_SERVICE_METRICS_DB_PASSWORD}
+      POSTGRES_DB: ${TASK_SERVICE_METRICS_DB_NAME}
+    ports:
+      - "${TASK_SERVICE_METRICS_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${TASK_SERVICE_METRICS_DB_USER}", "-d", "${TASK_SERVICE_METRICS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  user-service-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${USER_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${USER_SERVICE_DB_NAME}
+    ports:
+      - "${USER_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${USER_SERVICE_DB_USER}", "-d", "${USER_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  user-service-metrics-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${USER_SERVICE_METRICS_DB_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_METRICS_DB_PASSWORD}
+      POSTGRES_DB: ${USER_SERVICE_METRICS_DB_NAME}
+    ports:
+      - "${USER_SERVICE_METRICS_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${USER_SERVICE_METRICS_DB_USER}", "-d", "${USER_SERVICE_METRICS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  habit-service-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${HABIT_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${HABIT_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${HABIT_SERVICE_DB_NAME}
+    ports:
+      - "${HABIT_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${HABIT_SERVICE_DB_USER}", "-d", "${HABIT_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  habit-service-metrics-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${HABIT_SERVICE_METRICS_DB_USER}
+      POSTGRES_PASSWORD: ${HABIT_SERVICE_METRICS_DB_PASSWORD}
+      POSTGRES_DB: ${HABIT_SERVICE_METRICS_DB_NAME}
+    ports:
+      - "${HABIT_SERVICE_METRICS_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${HABIT_SERVICE_METRICS_DB_USER}", "-d", "${HABIT_SERVICE_METRICS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  payment-service-db:
+    image: postgres:16
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_USER: ${PAYMENT_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${PAYMENT_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${PAYMENT_SERVICE_DB_NAME}
+    ports:
+      - "${PAYMENT_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${PAYMENT_SERVICE_DB_USER}", "-d", "${PAYMENT_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    hostname: mongodb
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    #      MONGO_INITDB_ROOT_USERNAME: admin # не выходит с авторизацией
+    #      MONGO_INITDB_ROOT_PASSWORD: admin
+    env_file:
+      - .env
+
+  # Для тестовой по отправки сообшений через почту (notification-service)
+  mail-hog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: mailhog
+    ports:
+      - "${MAILHOG_SMTP_PORT}:${MAILHOG_SMTP_PORT}"
+      - "${MAILHOG_HTTP_PORT}:${MAILHOG_HTTP_PORT}" # на этом порту можно открыть в браузере http://localhost:8025/
+    env_file:
+      - .env
+
+  zookeeper:
+    image: bitnami/zookeeper:3.6.2
+    hostname: zookeeper
+    ports:
+      - "${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - kafka-cluster
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  kafka:
+    image: bitnami/kafka:2.7.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "${KAFKA_SERVER}:${KAFKA_SERVER}"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
+      - KAFKA_CFG_LISTENERS=${KAFKA_LISTENERS},LOCAL://kafka:9095
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=${KAFKA_ZOOKEEPER_CONNECT}
+      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_ADVERTISED_LISTENERS},LOCAL://kafka:9095
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,LOCAL:PLAINTEXT
+
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-cluster
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:4.0.0
+    ports:
+      - "${KAFDROP_PORT}:9000"
+    depends_on:
+      - kafka
+    networks:
+      - kafka-cluster
+    environment:
+      KAFKA_BROKER_CONNECT: kafka:9095
+
+networks:
+    kafka-cluster:
+      name: kafka-cluster
+      driver: bridge

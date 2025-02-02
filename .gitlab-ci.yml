@@ -1,0 +1,197 @@
+image: gradle:8.5-jdk21
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.workers.max=4"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  GIT_CLEAN_FLAGS: -ffdx -e /.gradle
+
+# Определение стадий пайплайна
+stages:
+  - checkstyle
+  - build
+  - unit_test
+  - integration_test
+
+# Общий before_script для всех джоб
+before_script:
+  - if [ ! -d ".gradle/caches" ]; then echo "Gradle cache is missing!"; fi
+  - mkdir -p scripts
+  - if [ ! -f scripts/wait-for-it.sh ]; then
+    curl -o scripts/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh;
+    fi
+  - chmod +x scripts/wait-for-it.sh
+  - source .env.dev
+
+# Джоба для проверки стиля кода с использованием Checkstyle
+checkstyle:
+  stage: checkstyle
+  script:
+    - echo "Running aggregated Checkstyle tasks with parallel build..."
+    - |
+      gradle checkAllCheckstyles --parallel || {
+        echo "Чекстайл отметил несколько проблем. Это нормальная часть рабочего процесса. Исправь их, и всё будет отлично!"
+        echo "Проверь настройки локального Checkstyle: https://wika.kata.academy/pages/viewpage.action?pageId=25035473"
+        exit 1
+      }
+  artifacts:
+    when: on_failure
+    paths:
+      - "**/build/reports/checkstyle/*.html"
+    expire_in: 1 day
+  allow_failure: false
+
+
+# Джоба для сборки приложения
+build:
+  stage: build
+  script:
+    - echo "Building project without skipping tests..."
+    - |
+    - if [! gradle assemble --parallel]; then
+      echo "На этапе Build, что-то пошло не так. Это нормальная часть рабочего процесса, посмотри внимательнее свой код, исправь и попробуй снова!"
+      echo "Для того, чтобы посмотреть логи и артефакты джобы перейди по ссылке, найди свой merge_requests и в строке Pipeline кликни на крестик лкм,
+      в появившемся окне кликни по названию джобы, там будет информация об ошибке http://185.180.231.44/alexeysapsay/habit-tracker/-/merge_requests"
+      echo "Eсли за 30-60 минут продвинуться в задаче не получилось, пиши в общий чат. Как формировать хороший вопрос можно посмотреть тут https://wika.kata.academy/pages/viewpage.action?pageId=33161776"
+      exit 1;
+      fi
+    - ls -la .gradle/
+  artifacts:
+    when: on_failure
+    paths:
+      - "build/"
+    expire_in: 1 day
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-build"
+    paths:
+      - .gradle/
+      - build/
+      - scripts/
+    policy: pull-push
+
+
+# Джоба для запуска Unit-тестов
+unit_tests:
+  stage: unit_test
+  before_script:
+    - echo "Setting up locales..."
+    - apt-get update && apt-get install -y locales
+    - locale-gen ru_RU.UTF-8
+    - update-locale LANG=ru_RU.UTF-8
+  script:
+    - echo "Running Unit tests..."
+    - |
+      gradle test --tests "*UnitTest" --continue \
+        --parallel 2>&1 | grep -v 'OpenJDK 64-Bit Server VM warning' || {
+      echo "На этапе Unit test, что-то пошло не так. Это нормальная часть рабочего процесса, посмотри внимательнее свой код, исправь и попробуй снова!"
+      echo "Для того, чтобы посмотреть логи и артефакты джобы перейди по ссылке, найди свой merge_requests и в строке Pipeline кликни на крестик лкм,
+      в появившемся окне кликни по названию джобы, там будет информация об ошибке: http://185.180.231.44/alexeysapsay/habit-tracker/-/merge_requests"
+      echo "Eсли за 30-60 минут продвинуться в задаче не получилось, пиши в общий чат. Как формировать хороший вопрос можно посмотреть тут
+      : https://wika.kata.academy/pages/viewpage.action?pageId=33161776"
+        exit 1
+      }
+  artifacts:
+    when: on_failure
+    reports:
+      junit: "**/build/test-results/test/*UnitTest*.xml"
+    paths:
+      - "**/build/test-results/test/*UnitTest*.xml"
+    expire_in: 1 day
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-unit-tests"
+    paths:
+      - .gradle/
+      - build/
+      - scripts/
+    policy: pull
+
+
+# Джоба для запуска Integration-тестов
+integration_tests:
+  stage: integration_test
+  script:
+    - echo "Running Integration tests..."
+    - |
+      gradle test --tests "*IntegrationTest" --continue \
+        -x :auth-service:test \
+        -x :user-service:test \
+        -x :habit-service:test \
+        -x :notification-service:test \
+        -x :api-gateway:test \
+        -x :payment-service:test \
+        -x :task-service:test \
+        -x :eureka-server:test \
+        --parallel || {
+      echo "На этапе Integration test, что-то пошло не так. Это нормальная часть рабочего процесса, посмотри внимательнее свой код, исправь и попробуй снова!"
+      echo "Для того, чтобы посмотреть логи и артефакты джобы перейди по ссылке, найди свой merge_requests и в строке Pipeline кликни на крестик лкм,
+      в появившемся окне кликни по названию джобы, там будет информация об ошибке: http://185.180.231.44/alexeysapsay/habit-tracker/-/merge_requests"
+      echo "Eсли за 30-60 минут продвинуться в задаче не получилось, пиши в общий чат. Как формировать хороший вопрос можно посмотреть тут
+      : https://wika.kata.academy/pages/viewpage.action?pageId=33161776"
+        exit 1
+      }
+  artifacts:
+    when: on_failure
+    reports:
+      junit: "**/build/test-results/test/*IntegrationTest*.xml"
+    paths:
+      - "**/build/test-results/test/*IntegrationTest*.xml"
+    expire_in: 1 day
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-integration-tests"
+    paths:
+      - .gradle/
+      - build/
+      - scripts/
+    policy: pull
+
+
+# Джоба для запуска анализа SonarQube
+#sonarqube:
+#  stage: sonarqube
+#  variables:
+#    SONAR_USER_HOME: "$CI_PROJECT_DIR/.sonar"  # Путь для кеша SonarQube
+#    SONAR_PROJECT_KEY: "gitlab-habit-tracker-project"
+#    SONAR_HOST_URL: "http://185.180.231.44:9000"  # Замените на URL вашего сервера
+#    SONAR_TOKEN: "sqp_326fd8572323d3bcacaa2f202871ca198e421486"
+#  cache:
+#    key: "${CI_COMMIT_REF_SLUG}-sonar"
+#    paths:
+#      - .sonar/cache
+#  script:
+#    - >
+#      echo "SonarQube Project Key: $SONAR_PROJECT_KEY"
+#    - >
+#      echo "SonarQube Host URL: $SONAR_HOST_URL"
+#    - if [ -n "$SONAR_TOKEN" ]; then
+#      echo "Sonar Token is set";
+#      else
+#      echo "Sonar Token is missing";
+#      fi
+#    - gradle build sonarqube -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+#  allow_failure: true
+#  only:
+#    - master
+#    - dev
+#    - /^feature\/.*$/  # Для всех веток, начинающихся с "feature/"
+#  artifacts:
+#    reports:
+#      codequality: .sonar/report-task.txt  # Зависит от конфигурации SonarQube
+#    paths:
+#      - .sonar/cache
+#    expire_in: 1 day
+
+#sonarqube-check:
+#  stage: sonarqube-check
+#  variables:
+#    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Кеш для SonarQube
+#    GIT_DEPTH: "0"  # Полный fetch всех веток проекта
+#  cache:
+#    key: "${CI_COMMIT_REF_SLUG}-sonarqube"
+#    paths:
+#      - .gradle/
+#      - .sonar/cache
+#  script:
+#    - echo "Running SonarQube from manually installed scanner..."
+#    - /opt/sonar-scanner/bin/sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+#  allow_failure: true
+#  only:
+#    - dev
+#    - /^feature.*$/i

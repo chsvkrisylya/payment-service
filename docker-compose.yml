@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  payment-service-db:
+    image: postgres:16
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: ${PAYMENT_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${PAYMENT_SERVICE_DB_PASSWORD}
+      POSTGRES_DB: ${PAYMENT_SERVICE_DB_NAME}
+    ports:
+      - "${PAYMENT_SERVICE_DB_PORT}:${POSTGRES_PORT}"

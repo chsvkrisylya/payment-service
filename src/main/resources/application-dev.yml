@@ -1,0 +1,26 @@
+server:
+  port: ${PAYMENT_SERVER_PORT}
+  shutdown: graceful
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_SERVICE_URL_DEFAULTZONE}
+spring:
+  application:
+    name: ${PAYMENT_SERVICE_DB_NAME}
+  dataSource:
+      driver-class-name: ${POSTGRES_DRIVER}
+      password: ${PAYMENT_SERVICE_DB_PASSWORD}
+      username: ${PAYMENT_SERVICE_DB_USER}
+      url: jdbc:postgresql://${POSTGRES_HOST}:${PAYMENT_SERVICE_DB_PORT}/${PAYMENT_SERVICE_DB_NAME}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  mvc:
+    view:
+      prefix: classpath:/templates/
+      suffix: .html

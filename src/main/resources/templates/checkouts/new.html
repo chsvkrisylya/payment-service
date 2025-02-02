@@ -1,0 +1,408 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Payment</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<!--  <link rel="stylesheet" type="text/css" href="/css/app.css" th:href="@{/css/app.css}" />-->
+  <link rel="icon" type="image/png" href="/images/favicon.png" th:href="@{/images/favicon.png}"/>
+  <style>
+    @keyframes glow {
+      0% {
+        box-shadow: 0 0 10px rgba(34, 139, 34, 0.5), 0 0 20px rgba(34, 139, 34, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(34, 139, 34, 0.8), 0 0 30px rgba(34, 139, 34, 0.6);
+      }
+      100% {
+        box-shadow: 0 0 10px rgba(34, 139, 34, 0.5), 0 0 20px rgba(34, 139, 34, 0.3);
+      }
+    }
+    .glow {
+      display: inline-block;
+      animation: glow 1.5s infinite;
+    }
+    body {
+      background-color: lightgrey;
+    }
+    a {
+      text-decoration: none;
+    }
+    .styled-header {
+      margin: 0;
+      background-color: #1b1b1b;
+      color: steelblue;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+    }
+    .description {
+      background-color: whitesmoke;
+      border-radius: 6px;
+      box-shadow: dimgrey 5px 5px 10px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .title {
+      border-bottom: #1b1b1b 1px solid;
+      text-align: center;
+    }
+    .title-description {
+      margin: 10px;
+    }
+
+    .card-content {
+      margin: 20px;
+      width: 270px;
+      height: 140px;
+      border: grey 1px solid;
+      border-radius: 10px;
+      box-shadow: dimgrey 0 0 5px;
+    }
+    th, td {
+      width: 12.5%;
+      border: 1px solid black;
+      text-align: center;
+    }
+    .form-button-submit {
+      margin-top: 20px;
+      background-color: forestgreen;
+      border-radius: 5px;
+      border: dimgrey 0.5px solid;
+      box-shadow: dimgrey 2px 2px 10px;
+      color: whitesmoke;
+    }
+
+    .accordion {
+      background-color: whitesmoke;
+      border-radius: 6px;
+      box-shadow: dimgrey 5px 5px 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div id="notification"></div>
+
+<header class="styled-header">
+  <div class="left-part">
+    <a class="pseudoshop" href="/payment/checkouts"><strong>HABIT</strong> TRACKER</a>
+  </div>
+  <div class="notice-wrapper">
+    <div class="show notice error notice-error" th:if="${errorDetails}">
+      <span class="notice-message" th:text="${errorDetails}"></span>
+    </div>
+  </div>
+  <div class="right-part">
+    <a class="braintree" href="https://developers.braintreepayments.com/guides/drop-in" target="_blank">Braintree</a>
+  </div>
+</header>
+
+<div class="wrapper">
+  <div class="checkout container">
+
+    <div class="description">
+      <div class="title">
+        <h4>Это тестовый платеж</h4>
+      </div>
+
+      <div class="title-description">
+        <p>
+          Сделай платеж с помощью карты для тестов.
+          <br />
+          PayPal доступен в режиме Production (реальные платежи).
+          <br />
+          <strong>ПОДСКАЗКА: Нажми на номер, дату или логин/пароль, чтобы скопировать их.</strong>
+        </p>
+      </div>
+
+      <div class="card-for-tests">
+        <div class="card-content">
+          <header class="header" style="text-align: center; margin-top: 5px">
+            <h5>Карта для тестов</h5>
+          </header>
+          <div class="card-number" style="text-align: center; letter-spacing: 2px; background-color: lightgrey">
+            <strong onmouseover="over(this)" onmouseout="out(this)" onclick="copyToClipboard(this)">4111 1111 1111 1111</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <div class="exp-date" style="margin-left: 50px; margin-top: 20px; width: 50px; background-color: lightgrey; letter-spacing: 1px">
+              <strong onmouseover="over(this)" onmouseout="out(this)" onclick="copyToClipboard(this)">01/25</strong>
+            </div>
+            <div class="cvv" style=" margin-right: 50px; margin-top: 20px; width: 35px; background-color: lightgrey; letter-spacing: 2px">
+              <strong onmouseover="over(this)" onmouseout="out(this)" onclick="copyToClipboard(this)">123</strong>
+            </div>
+          </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="accordion" id="accordionExample">
+      <div class="card">
+        <div class="card-header" id="headingOne">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Благотворительность
+            </button>
+          </h2>
+        </div>
+
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+          <div class="card-body">
+            <form id="payment-form" method="post" action="/payment/checkouts">
+              <section>
+                <div class="bt-drop-in-wrapper">
+                  <div id="bt-dropin"></div>
+                </div>
+
+                <label for="amount">Сумма перевода</label>
+                <div class="input-group" style="width: 180px">
+                  <input type="tel" id="amount" name="amount" min="1" value="10" class="form-control" aria-label="Сумма в долларах (с точкой и двумя десятичными знаками)">
+                  <div class="input-group-append">
+                    <span class="input-group-text">$</span>
+                  </div>
+                </div>
+              </section>
+
+              <input type="hidden" id="nonce" name="payment_method_nonce" />
+              <button class="form-button-submit glow" type="submit">Поддержать проект</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" id="headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+              Подписка
+            </button>
+          </h2>
+        </div>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+          <div class="card-body">
+            <form id="subscription-form" method="post" action="/subscriptions/pay">
+              <div class="subscription-plan">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exampleRadios" id="Radios1" value="option1" checked>
+                  <label class="form-check-label" for="Radios1">
+                    подписка на месяц
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exampleRadios" id="Radios2" value="option2">
+                  <label class="form-check-label" for="Radios2">
+                    подписка на год
+                  </label>
+                </div>
+              </div>
+              <section>
+                <div class="bt-drop-in-wrapper">
+                  <div id="bt-dropin-subscription"></div>
+                </div>
+              </section>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" id="heading3">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse3" aria-expanded="true" aria-controls="collapse3">
+              Создать тарифный план подписки
+            </button>
+          </h2>
+        </div>
+
+        <div id="collapse3" class="collapse show" aria-labelledby="heading3" data-parent="#accordionExample">
+          <div class="card-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container" style="margin-top: 20px">
+    <table class="table table-hover">
+      <thead class="thead-dark">
+      <tr>
+        <th>id оригинальной транзакции или id возврата</th>
+        <th>id оригинальной транзакции, если поле не null, то был возврат</th>
+        <th>сумма</th>
+        <th>Статус платежа</th>
+        <th>Номер карты</th>
+        <th>дата создания</th>
+        <th>Возврат, ануллирование, отмена</th>
+      </tr>
+      </thead>
+      <tbody id="transactions-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://js.braintreegateway.com/web/dropin/1.41.0/js/dropin.min.js"></script>
+
+<script th:inline="javascript">
+  function getAllPlans() {
+    const response = fetch('/api/plan/search');
+  }
+
+  /*<![CDATA[*/
+  var form = document.querySelector('#payment-form');
+  var client_token = [[${clientToken}]];
+
+  braintree.dropin.create({
+    authorization: client_token,
+    container: '#bt-dropin',
+  }, function (createErr, instance) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      instance.requestPaymentMethod(function (err, payload) {
+        if (err) {
+          console.log('Error', err);
+          return;
+        }
+
+        // Add the nonce to the form and submit
+        document.querySelector('#nonce').value = payload.nonce;
+        form.submit();
+      });
+    });
+  });
+
+  async function getAllTransactions(){
+    const response = await fetch('/api/payment/search');
+    const transactions = await response.json();
+    return transactions;
+  }
+
+  async function showAllTransactions () {
+    document.getElementById('transactions-table').innerHTML = '';
+    getAllTransactions().then((transactions) => {
+      const refundedTransactionIds = new Set();
+      transactions.forEach(transaction => {
+        if (transaction.refundedTransactionId !== null) {
+          refundedTransactionIds.add(transaction.refundedTransactionId);
+        }
+        if (refundedTransactionIds.has(transaction.id)) {
+
+        } else {
+          document.getElementById('transactions-table').innerHTML += `
+            <tr>
+                <td>${transaction.id}</td>
+                <td>${transaction.refundedTransactionId}</td>
+                <td>${transaction.type === 'CREDIT'? '-' +transaction.amount : transaction.amount}</td>
+                <td>${transaction.status}</td>
+                <td>4111 1111 1111 1111</td>
+                <td>${transaction.createdAt}</td>
+                <td>
+                    <div style="display: flex; flex-direction: column;">
+                    ${transaction.status === 'SETTLED' && transaction.type !== 'CREDIT' ?
+                  `<button class="btn btn-primary" type="submit" id="refund" onclick="getRefund('${transaction.id}')">Возврат</button>` : ''}
+                    ${transaction.status === 'SUBMITTED_FOR_SETTLEMENT' ?
+                  `<button class="btn btn-warning" type="submit" id="cancel" onclick="getCancel('${transaction.id}')">Отмена</button>` : ''}
+                    ${transaction.status === 'SUBMITTED_FOR_SETTLEMENT' ?
+                  `<button class="btn btn-danger" type="submit" id="void" onclick="getVoid('${transaction.id}')">Анулировать</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+              `
+        }
+      })
+    })
+  }
+
+  showAllTransactions();
+
+  async function getCancel(id) {
+    const response = await fetch('/api/payment/cancel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify({id})
+    });
+
+    const result = await response.json();
+    showAllTransactions();
+    return result
+  }
+
+  async function getVoid(id) {
+    const response = await fetch('/api/payment/void', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify({id})
+    });
+
+    const result = await response.json();
+    showAllTransactions();
+    return result
+  }
+
+  async function getRefund(id) {
+    const response = await fetch('/api/payment/refund', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify({id})
+    });
+
+    const result = await response.json();
+    showAllTransactions();
+    return result
+  }
+
+  function over(element) {
+    element.style.color = 'rgb(0,123,255)';
+  }
+
+  function out(element) {
+    element.style.color = 'black';
+  }
+
+  function copyToClipboard(element) {
+    const tempInput = document.createElement('input');
+    tempInput.value = element.textContent;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+
+    ShowNotification('Скопировано в буфер обмена ' + tempInput.value);
+
+  }
+
+  function ShowNotification(message) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style = 'position: fixed;' +
+            '            top: 20px;' +
+            '            right: 20px;' +
+            '            background-color: #4CAF50;' +
+            '            color: white;' +
+            '            padding: 15px;' +
+            '            border-radius: 5px;' +
+            '            color: black;' +
+            '            display: none;' +
+            '            z-index: 1000;';
+    notification.style.display = 'block';
+
+    // Скрыть уведомление через 10 секунд
+    setTimeout(() => {notification.style.display = 'none';}, 10000);
+  }
+  /*]]>*/
+</script>
+<script src="/javascript/demo.js" th:src="@{/javascript/demo.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.6.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.6.11"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+apply plugin: 'checkstyle'
+
+checkstyle {
+    configFile = file("${project.projectDir}/config/checkstyle/checkstyle.xml")
+    toolVersion = "10.12.4"
+}
+
+checkstyleMain {
+    source 'src/main/java'
+    include '**/*.java'
+}
+
+checkstyleTest {
+    source 'src/test/java'
+    include '**/*.java'
+}

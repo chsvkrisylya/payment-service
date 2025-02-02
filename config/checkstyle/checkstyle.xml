@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <!--Расширение файла должно быть java, properties, xml-->
+    <property name="fileExtensions" value="java, properties, xml"/>
+
+    <!-- Проверка размера файлов -->
+    <!-- See http://checkstyle.sf.net/config_sizes.html -->
+    <module name="FileLength"/>
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+    <module name="UniqueProperties"/>
+
+
+    <!-- Проверка Headers -->
+    <!-- See http://checkstyle.sf.net/config_header.html   -->
+    <!-- <module name="Header"> -->
+    <!--   <property name="headerFile" value="${checkstyle.header.file}"/> -->
+    <!--   <property name="fileExtensions" value="java"/> -->
+    <!-- </module> -->
+
+    <!-- Проверка однострочных комментариев -->
+    <!-- See https://checkstyle.sourceforge.io/checks/regexp/regexpsingleline.html-->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\s*\/\/(?!\s*\*).*" />
+        <property name="message" value="Закомментированные однострочные блоки кода не допускаются." />
+        <property name="severity" value="ignore"/>
+    </module>
+
+    <!-- Проверка многострочных комментариев, исключая Javadoc -->
+    <!-- See https://checkstyle.sourceforge.io/checks/regexp/regexpmultiline.html-->
+    <module name="RegexpMultiline">
+        <property name="format" value="(?s)^\s*/\*(?!\*)(?!\s*\*{2})(?!@)[\s\S]*?\*/" />
+        <property name="message" value="Закомментированные многострочные блоки кода не допускаются." />
+    </module>
+
+    <module name="TreeWalker">
+
+        <module name="EmptyLineSeparator"> <!-- Java Style Guide: Source file structure -->
+            <property name="tokens" value="
+            CLASS_DEF, ENUM_DEF, INTERFACE_DEF, CTOR_DEF, STATIC_INIT, INSTANCE_INIT, VARIABLE_DEF, METHOD_DEF"/>
+            <property name="allowNoEmptyLineBetweenFields" value="true"/>
+            <property name="allowMultipleEmptyLines" value="false"/>
+            <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
+        </module>
+
+
+        <!-- Проверка соглашений именования -->
+        <!-- See http://checkstyle.sf.net/config_naming.html -->
+        <!--<module name="LocalFinalVariableName"/>-->
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+        <module name="MethodName"/>
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z0-9]*)*$"/>
+        </module>
+        <module name="ParameterName"/>
+        <module name="StaticVariableName"/>
+        <module name="TypeName"/>
+        <module name="ConstantName"/>
+
+
+        <!-- Проверка размера методов и количества параметров -->
+        <!-- See http://checkstyle.sf.net/config_sizes.html -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF"/>
+            <property name="max" value="100"/>
+        </module>
+        <module name="OneStatementPerLine"/>
+        <module name="ParameterNumber"/>
+
+        <!-- Проверка пробелов и отступов -->
+        <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+        <module name="EmptyForIteratorPad"/>
+        <module name="GenericWhitespace"/>
+        <module name="MethodParamPad"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="OperatorWrap"/>
+        <module name="ParenPad"/>
+        <module name="TypecastParenPad"/>
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround"/>
+
+        <!-- Проверка модификаторов -->
+        <!-- https://checkstyle.sourceforge.io/checks/modifier/index.html -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+
+        <!-- Проверка импорта -->
+        <!-- https://checkstyle.sourceforge.io/checks/imports/index.html -->
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports">
+            <property name="processJavadoc" value="false"/>
+        </module>
+
+        <!-- Проверка блоков кода -->
+        <!-- See http://checkstyle.sf.net/config_blocks.html -->
+        <module name="AvoidNestedBlocks"/>
+        <module name="LeftCurly"/>
+        <module name="NeedBraces"/>
+        <module name="RightCurly"/>
+
+
+        <!-- Проверка общих проблем кодирования -->
+        <!-- See http://checkstyle.sf.net/config_coding.html -->
+        <!--<module name="AvoidInlineConditionals"/>-->
+        <module name="EmptyStatement"/>
+        <module name="EqualsHashCode"/>
+        <!--<module name="HiddenField"/>-->
+        <module name="IllegalInstantiation"/>
+        <module name="InnerAssignment"/>
+        <!--<module name="MagicNumber"/>-->
+        <module name="MissingSwitchDefault"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+
+        <!-- Проверка дизайна классов -->
+        <!-- See http://checkstyle.sf.net/config_design.html -->
+        <!--<module name="DesignForExtension"/>-->
+        <!--<module name="FinalClass"/>-->
+        <!--<module name="HideUtilityClassConstructor"/>-->
+        <module name="InterfaceIsType"/>
+
+        <!-- Прочие проверки -->
+        <!-- See http://checkstyle.sf.net/config_misc.html -->
+        <module name="ArrayTypeStyle"/>
+        <!--<module name="FinalParameters"/>-->
+        <module name="TodoComment"/>
+        <module name="UpperEll"/>
+        <module name="EmptyBlock"/>
+        <module name="EmptyBlock">
+            <property name="tokens" value="LITERAL_CATCH"/>
+        </module>
+    </module>
+
+    <!-- Проверка подавления -->
+    <!-- https://checkstyle.sourceforge.io/filters/index.html -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <!-- Исключаем файлы module-info.java -->
+    <!-- See https://checkstyle.sourceforge.io/filefilters/index.html -->
+    <module name="BeforeExecutionExclusionFileFilter">
+        <property name="fileNamePattern" value="module\-info\.java$"/>
+    </module>
+</module>

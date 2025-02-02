@@ -1,0 +1,273 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'checkstyle'
+    id 'jacoco'
+    id "org.sonarqube" version "5.1.0.4882"   // Проверьте актуальную версию на официальной странице плагина
+
+}
+
+group = 'habittracker'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    springBootVersion = '3.2.0'
+    checkstyleVersion = '10.12.4'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal() // Required for SonarQube Gradle plugin
+}
+
+dependencies {
+    // spring boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+//        implementation 'org.springframework.boot:spring-boot-starter-cache'
+//        implementation 'org.springframework.boot:spring-boot-starter-quartz'
+//        implementation 'org.springframework.boot:spring-boot-starter'
+
+    // spring cloud
+//        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+//        implementation 'org.springframework.kafka:spring-kafka'
+
+    // database
+//        implementation 'org.liquibase:liquibase-core'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // test
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.hibernate:hibernate-validator:6.2.0.Final'
+    testImplementation 'jakarta.validation:jakarta.validation-api:3.0.0'
+    testImplementation 'org.glassfish:jakarta.el:4.0.0'
+    testImplementation 'org.mockito:mockito-core'
+
+    testImplementation 'org.wiremock:wiremock:3.9.1'
+    testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
+
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+    testImplementation 'org.testcontainers:postgresql:1.19.0'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers:3.2.0'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    // other
+    implementation 'com.braintreepayments.gateway:braintree-java:3.36.0'
+
+    // Основные зависимости для всех модулей
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0' // для подрузки .env
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2023.0.4' // Последняя версия совместима с Spring Boot 3.2
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+
+springBoot {
+    buildInfo()
+    mainClass = 'habittracker.userservice.PaymentServiceApplication'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+// Конфигурация JaCoCo
+jacoco {
+    toolVersion = "0.8.10" // версия JaCoCo
+}
+
+test {
+    finalizedBy jacocoTestReport
+    maxParallelForks = 1
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/config/*"
+            ])
+        }))
+    }
+}
+
+// Проверка минимального покрытия тестами
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.6 // Минимальное покрытие тестами 10%
+            }
+        }
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", System.getenv("SONAR_PROJECT_KEY")
+//        property "sonar.projectKey", "gitlab-habit-tracker-project"
+//        property "sonar.qualitygate.wait", true
+//        property "sonar.host.url", "http://185.180.231.44:9000"
+        property "sonar.host.url", System.getenv("SONAR_HOST_URL")
+        property "sonar.login", System.getenv("SONAR_TOKEN")
+    }
+}
+
+//sonarqube {
+//    properties {
+//        property "sonar.projectKey", "gitlab-habit-tracker-project"
+//        // property "sonar.qualitygate.wait", true  // Подключить после настройки quality gate
+//        property "sonar.host.url", "http://185.180.231.44:9000"
+//
+//        property "sonar.java.source", "17"
+//
+//        //подключить последовательно дополнительные настройки после прохождения успешного пайпа
+//        //property "sonar.projectName", "GitLab Habit Tracker Project"
+//        //property "sonar.projectVersion", "1.0"
+//        //property "sonar.sourceEncoding", "UTF-8"
+//
+//        // Дополнительные рекомендуемые свойства для многомодульных проектов
+//        property "sonar.modules", subprojects.collect { it.name }.join(',')
+//
+//        // Для каждого подмодуля можно указать специфичные свойства, если необходимо
+//        // Например:
+//        // subprojects.each { subproject ->
+//        //     property "sonar.${subproject.name}.sources", "src/main/java"
+//        // }
+//    }
+//}
+
+// Конфигурация Checkstyle
+checkstyle {
+    toolVersion = checkstyleVersion
+    configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+}
+
+// Зависимость задачи проверки от верификации покрытия
+tasks.named('check') {
+    dependsOn 'jacocoTestCoverageVerification'
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+}
+
+tasks.named('checkstyleMain') {
+    source = fileTree('src/main/java')
+    include '**/*.java'
+}
+
+tasks.named('checkstyleTest') {
+    source = fileTree('src/test/java')
+    include '**/*.java'
+}
+
+def defaultProfile = project.findProperty('defaultProfile') ?: 'test'
+
+tasks.withType(org.springframework.boot.gradle.tasks.run.BootRun).configureEach {
+    def activeProfile = project.findProperty('springProfilesActive') ?: defaultProfile
+    args '--spring.profiles.active=' + activeProfile
+}
+
+tasks.withType(Test).configureEach {
+    def activeProfile = project.findProperty('springProfilesActive') ?: defaultProfile
+    systemProperty 'spring.profiles.active', activeProfile
+}
+
+//возможность включать параллельную выполнение джобы в ci/cd адаптивно подстраиваясь к числу процессоров системы
+tasks.withType(Test) {
+    maxParallelForks = Runtime.runtime.availableProcessors()
+}
+
+// ---------------------------------------------------------------------
+// ИСКЛЮЧАЕМ каталог "integration" из обычных тестов и
+// создаём отдельную задачу для интеграционных тестов
+test {
+    useJUnitPlatform()
+    exclude '**/integration/**'
+}
+
+task integrationTest(type: Test) {
+    useJUnitPlatform()
+    description = 'Runs integration tests from the integration folder.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter test
+    include '**/integration/**'
+}
+// ---------------------------------------------------------------------
+
+// Глобальная задача для скачивания wait-for-it.sh
+tasks.register('downloadWaitForIt') {
+    def scriptDir = file("${rootProject.projectDir}/scripts")
+    def scriptFile = file("${scriptDir}/wait-for-it.sh")
+
+    doLast {
+        if (!scriptFile.exists()) {
+            if (!scriptDir.exists()) {
+                scriptDir.mkdirs()
+            }
+
+            // Проверка на операционную систему
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                // Скачиваем файл с помощью PowerShell для Windows
+                exec {
+                    commandLine 'powershell', '-Command', "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh' -OutFile '${scriptFile}'"
+                }
+            } else {
+                // Скачиваем файл для Linux, macOS
+                exec {
+                    commandLine 'sh', '-c', "wget -O ${scriptFile} https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh"
+                }
+            }
+            println "Script wait-for-it.sh downloaded in ${scriptDir}"
+        } else {
+            println "Script wait-for-it.sh exists, skipping download"
+        }
+    }
+}
+
