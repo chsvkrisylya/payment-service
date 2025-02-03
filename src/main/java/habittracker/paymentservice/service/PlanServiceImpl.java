@@ -6,7 +6,6 @@ import com.braintreegateway.Result;
 import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.PlanRequestDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Slf4j
 public class PlanServiceImpl implements PlanService {
 
     @Override
@@ -61,7 +59,7 @@ public class PlanServiceImpl implements PlanService {
                 .name("Default")
                 .price(new BigDecimal("10.00"))
                 .currencyIsoCode("USD")
-                .numberOfBillingCycles(0)
+                .numberOfBillingCycles(1)
                 .billingFrequency(1)
                 .trialPeriod(false);
 
@@ -74,53 +72,29 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public Plan getPlanByName(String name) {
-        List<Plan> plans = getAllPlans();
-
-        Optional<Plan> foundPlan = plans.stream()
-                .filter(plan -> plan.getName().equals(name))
-                .findFirst();
-
-        if (foundPlan.isEmpty()) {
-            log.warn("План с названием '" + name + "' не найден.");
-        }
-
-        return foundPlan.orElse(null);
+    public Optional<Plan> getPlanByName(String name) {
+        return getAllPlans().stream().filter(plan -> plan.getName().equals(name)).findFirst();
     }
 
     @Override
-    public Plan getPlanById(String id) {
+    public Optional<Plan> getPlanById(String id) {
         try {
-            return BraintreeData.gateway.plan().find(id);
+            return Optional.of(BraintreeData.gateway.plan().find(id));
         } catch (NotFoundException e) {
-            log.warn("План с id '" + id + "' не найден.");
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
     public Result<Plan> updatePlanByName(String name, PlanRequest request) {
-        try {
-            String id = getPlanByName(name).getId();
+        String id = getPlanByName(name).map(Plan::getId)
+                .orElseThrow(() -> new NotFoundException("План с именем '" + name + "' не найден."));
 
-            if (id.isEmpty()) {
-                throw new NotFoundException();
-            }
-
-            return BraintreeData.gateway.plan().update(id, request);
-        } catch (NotFoundException e) {
-            log.warn("Не возможно изменить план по имени");
-            return null;
-        }
+        return BraintreeData.gateway.plan().update(id, request);
     }
 
     @Override
     public Result<Plan> updatePlanById(String id, PlanRequest request) {
-        try {
-            return BraintreeData.gateway.plan().update(id, request);
-        } catch (Exception e) {
-            log.warn("Не возможно изменить план по id");
-            return null;
-        }
+        return BraintreeData.gateway.plan().update(id, request);
     }
 }

@@ -1,15 +1,13 @@
 package habittracker.paymentservice.service;
 
-import com.braintreegateway.ResourceCollection;
-import com.braintreegateway.Result;
-import com.braintreegateway.Subscription;
-import com.braintreegateway.SubscriptionRequest;
-import com.braintreegateway.SubscriptionSearchRequest;
+import com.braintreegateway.*;
+import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
 import habittracker.paymentservice.model.dto.SubscriptionRequestDTO;
 import habittracker.paymentservice.service.util.DateFormatter;
 import habittracker.paymentservice.service.util.NumFormatter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,28 +15,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    PlanServiceImpl planService;
-    NumFormatter numFormatter;
+    private final PlanServiceImpl planService;
+    private final NumFormatter numFormatter;
 
     @Override
     public SubscriptionRequest createSubscriptionRequest(SubscriptionRequestDTO requestDTO) {
-
-        String planId = planService.getPlanByName(requestDTO.getName()).getId();
+        Plan plan = planService.getPlanByName(requestDTO.getName())
+                .orElseThrow(() -> new NotFoundException("Plan not found"));
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest()
-                .planId(planId)
-                .price(numFormatter.stringToNum(requestDTO.getStrPrice(), BigDecimal.class))
+                .planId(plan.getId())
+                .price(numFormatter.stringToNum(requestDTO.getStrPrice(), BigDecimal.class)
+                        .orElseGet(plan::getPrice))
                 .paymentMethodNonce(requestDTO.getNonce())
                 .numberOfBillingCycles(requestDTO.getNumOfBillingCycles())
+                .trialPeriod(requestDTO.isTrialPeriod())
                 .options()
                 .startImmediately(true)
                 .revertSubscriptionOnProrationFailure(false)
                 .done();
 
         if (requestDTO.isTrialPeriod()) {
-            subscriptionRequest.trialPeriod(true).trialDuration(requestDTO.getTrialDuration())
+            subscriptionRequest.trialDuration(requestDTO.getTrialDuration())
                     .trialDurationUnit(requestDTO.getDurationUnit());
         }
         return subscriptionRequest;
@@ -46,11 +47,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public SubscriptionRequest getDefaultSubscriptionRequest(String nonce) {
-        String planId = planService.getPlanByName("Default").getId();
-        if (planId == null) {
-            planService.createDefaultPlan();
-            planId = planService.getPlanByName("Default").getId();
-        }
+        String planId = planService.getPlanByName("Default")
+                .map(Plan::getId)
+                .orElseGet(() -> planService.createDefaultPlan().getTarget().getId());
 
         return new SubscriptionRequest()
                 .planId(planId)

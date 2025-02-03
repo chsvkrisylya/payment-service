@@ -5,76 +5,80 @@ import com.braintreegateway.PlanRequest;
 import com.braintreegateway.Result;
 import habittracker.paymentservice.controller.PlanController;
 import habittracker.paymentservice.service.PlanService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class PlanControllerUnitTest {
 
     @Mock
     private PlanService planService;
 
+    @Mock
+    private Result<Plan> planResult;
+
+    @Mock
+    private Plan plan;
+
+    @Mock
+    private List<Plan> planList;
+
+    @Mock
+    private PlanRequest planRequest;
+
     @InjectMocks
     private PlanController planController;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
     void testGetAllPlans() {
-        List<Plan> plan = Mockito.mock(List.class);
-        when(planService.getAllPlans()).thenReturn(plan);
+        when(planService.getAllPlans()).thenReturn(planList);
         var result = planController.getAllPlans();
-        assertThat(result).isEqualTo(ResponseEntity.ok(plan));
+        assertThat(result).isEqualTo(ResponseEntity.ok(planList));
     }
 
     @Test
     void testGetPlanById() {
-        Plan plan = Mockito.mock(Plan.class);
-        when(planService.getPlanById(any())).thenReturn(plan);
+        when(planService.getPlanById(any())).thenReturn(Optional.of(plan));
         var result = planController.getPlanById(any());
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
 
     @Test
     void testGetPlanByName() {
-        Plan plan = Mockito.mock(Plan.class);
-        when(planService.getPlanByName(any())).thenReturn(plan);
+        when(planService.getPlanByName(any())).thenReturn(Optional.of(plan));
         var result = planController.getPlanByName(any());
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
 
     @Test
     void testCreatePlan() {
-        Result<Plan> plan = Mockito.mock(Result.class);
-        when(planService.createPlan(any())).thenReturn(plan);
+        when(planService.createPlan(any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(plan);
         var result = planController.createPlan(any());
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
 
     @Test
     void testCreateDefaultPlan() {
-        Result<Plan> plan = Mockito.mock(Result.class);
-        when(planService.createDefaultPlan()).thenReturn(plan);
+        when(planService.createDefaultPlan()).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(plan);
         var result = planController.createDefaultPlan();
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
 
     @Test
     void testGetPlanRequest() {
-        PlanRequest planRequest = Mockito.mock(PlanRequest.class);
         when(planService.createPlanRequest(any())).thenReturn(planRequest);
         var result = planController.getPlanRequest(any());
         assertThat(result).isEqualTo(ResponseEntity.ok(planRequest));
@@ -82,7 +86,6 @@ class PlanControllerUnitTest {
 
     @Test
     void testGetDefaultPlanRequest() {
-        PlanRequest planRequest = Mockito.mock(PlanRequest.class);
         when(planService.createDefaultPlanRequest()).thenReturn(planRequest);
         var result = planController.getDefaultPlanRequest();
         assertThat(result).isEqualTo(ResponseEntity.ok(planRequest));
@@ -90,16 +93,16 @@ class PlanControllerUnitTest {
 
     @Test
     void testUpdatePlanById() {
-        Result<Plan> plan = Mockito.mock(Result.class);
-        when(planService.updatePlanById(any(), any())).thenReturn(plan);
+        when(planService.updatePlanById(any(), any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(plan);
         var result = planController.updatePlanById(any(), any());
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
 
     @Test
     void testUpdatePlanByName() {
-        Result<Plan> plan = Mockito.mock(Result.class);
-        when(planService.updatePlanByName(any(), any())).thenReturn(plan);
+        when(planService.updatePlanByName(any(), any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(plan);
         var result = planController.updatePlanByName(any(), any());
         assertThat(result).isEqualTo(ResponseEntity.ok(plan));
     }
@@ -112,29 +115,31 @@ class PlanControllerUnitTest {
     }
 
     @Test
-    void testNullGetPlanById() {
-        when(planService.getPlanById(any())).thenReturn(null);
+    void testOptionalEmptyGetPlanById() {
+        when(planService.getPlanById(any())).thenReturn(Optional.empty());
         var result = planController.getPlanById(any());
-        assertThat(result).isEqualTo(ResponseEntity.ok(null));
+        assertThat(result).isEqualTo(ResponseEntity.notFound().build());
     }
 
     @Test
-    void testNullGetPlanByName() {
-        when(planService.getPlanByName(any())).thenReturn(null);
+    void testOptionalEmptyGetPlanByName() {
+        when(planService.getPlanByName(any())).thenReturn(Optional.empty());
         var result = planController.getPlanByName(any());
-        assertThat(result).isEqualTo(ResponseEntity.ok(null));
+        assertThat(result).isEqualTo(ResponseEntity.notFound().build());
     }
 
     @Test
     void testNullCreatePlan() {
-        when(planService.createPlan(any())).thenReturn(null);
+        when(planService.createPlan(any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(null);
         var result = planController.createPlan(any());
         assertThat(result).isEqualTo(ResponseEntity.ok(null));
     }
 
     @Test
     void testNullCreateDefaultPlan() {
-        when(planService.createDefaultPlan()).thenReturn(null);
+        when(planService.createDefaultPlan()).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(null);
         var result = planController.createDefaultPlan();
         assertThat(result).isEqualTo(ResponseEntity.ok(null));
     }
@@ -155,14 +160,16 @@ class PlanControllerUnitTest {
 
     @Test
     void testNullUpdatePlanById() {
-        when(planService.updatePlanById(any(), any())).thenReturn(null);
+        when(planService.updatePlanById(any(), any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(null);
         var result = planController.updatePlanById(any(), any());
         assertThat(result).isEqualTo(ResponseEntity.ok(null));
     }
 
     @Test
     void testNullUpdatePlanByName() {
-        when(planService.updatePlanByName(any(), any())).thenReturn(null);
+        when(planService.updatePlanByName(any(), any())).thenReturn(planResult);
+        when(planResult.getTarget()).thenReturn(null);
         var result = planController.updatePlanByName(any(), any());
         assertThat(result).isEqualTo(ResponseEntity.ok(null));
     }

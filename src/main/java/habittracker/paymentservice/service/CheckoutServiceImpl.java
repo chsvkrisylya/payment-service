@@ -25,19 +25,14 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public TransactionRequest getNewTransactionRequest(String amount, String paymentMethodNonce) {
-
-        TransactionRequest transactionRequest = new TransactionRequest()
-                .amount(numFormatter.stringToNum(amount, BigDecimal.class))
+        return new TransactionRequest()
+                .amount(numFormatter.stringToNum(amount, BigDecimal.class).orElseThrow(
+                        () -> new NumberFormatException("Некорректный формат суммы: " + amount)
+                ))
                 .paymentMethodNonce(paymentMethodNonce)
                 .options()
                 .submitForSettlement(true)
                 .done();
-
-        if (numFormatter.hasError) {
-            throw new NumberFormatException();
-        }
-
-        return transactionRequest;
     }
 
     @Override
@@ -48,13 +43,13 @@ public class CheckoutServiceImpl implements CheckoutService {
     @Override
     public Status[] getTransactionSuccessStatuses() {
         return new Status[]{
-                Transaction.Status.AUTHORIZED,
-                Transaction.Status.AUTHORIZING,
-                Transaction.Status.SETTLED,
-                Transaction.Status.SETTLEMENT_CONFIRMED,
-                Transaction.Status.SETTLEMENT_PENDING,
-                Transaction.Status.SETTLING,
-                Transaction.Status.SUBMITTED_FOR_SETTLEMENT
+                Status.AUTHORIZED,
+                Status.AUTHORIZING,
+                Status.SETTLED,
+                Status.SETTLEMENT_CONFIRMED,
+                Status.SETTLEMENT_PENDING,
+                Status.SETTLING,
+                Status.SUBMITTED_FOR_SETTLEMENT
         };
     }
 

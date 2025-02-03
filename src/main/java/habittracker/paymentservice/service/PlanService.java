@@ -6,6 +6,7 @@ import com.braintreegateway.Result;
 import habittracker.paymentservice.model.dto.PlanRequestDTO;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PlanService {
 
@@ -19,9 +20,9 @@ public interface PlanService {
 
     List<Plan> getAllPlans();
 
-    Plan getPlanByName(String name);
+    Optional<Plan> getPlanByName(String name);
 
-    Plan getPlanById(String id);
+    Optional<Plan> getPlanById(String id);
 
     Result<Plan> updatePlanByName(String name, PlanRequest request);
 

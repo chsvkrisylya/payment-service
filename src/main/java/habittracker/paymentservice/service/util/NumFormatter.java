@@ -5,39 +5,56 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 @Slf4j
 @Component
 public class NumFormatter {
-    public boolean hasError = false;
+    private static final Map<Class<? extends Number>, Function<String, ? extends Number>> NUMBER_PARSERS;
 
-    public <T extends Number> T stringToNum(String num, Class<T> clazz) {
-        hasError = false;
-        try {
-            if (clazz == Integer.class) {
-                return clazz.cast(Integer.parseInt(num));
-            } else if (clazz == Double.class) {
-                return clazz.cast(Double.parseDouble(num));
-            } else if (clazz == Float.class) {
-                return clazz.cast(Float.parseFloat(num));
-            } else if (clazz == Long.class) {
-                return clazz.cast(Long.parseLong(num));
-            } else if (clazz == Short.class) {
-                return clazz.cast(Short.parseShort(num));
-            } else if (clazz == BigInteger.class) {
-                return clazz.cast(new BigInteger(num));
-            } else if (clazz == BigDecimal.class) {
-                return clazz.cast(new BigDecimal(num));
-            } else {
-                hasError = true;
-                log.warn("класс '" + clazz + "' не поддерживается");
-                return null;
-            }
-        } catch (NumberFormatException e) {
-            hasError = true;
-            log.warn("Нельзя преобразовать '" + num + "'");
-            return null;
+    static {
+        NUMBER_PARSERS = Map.of(
+                Byte.class, Byte::valueOf,
+                Short.class, Short::valueOf,
+                Integer.class, Integer::valueOf,
+                Long.class, Long::valueOf,
+                Float.class, Float::valueOf,
+                Double.class, Double::valueOf,
+                BigInteger.class, BigInteger::new,
+                BigDecimal.class, BigDecimal::new
+        );
+    }
 
+    /**
+     * Преобразует строку в число указанного типа.
+     *
+     * @param numberString Строка для преобразования
+     * @param targetType   Целевой числовой тип (например, Integer.class)
+     * @return Optional с числом или пустой, если преобразование невозможно
+     */
+    public <T extends Number> Optional<T> stringToNum(String numberString, Class<T> targetType) {
+        if (isBlank(numberString)) {
+            log.warn("Передана пустая строка или null: '{}'", numberString);
+            return Optional.empty();
         }
+
+        Function<String, ? extends Number> parser = NUMBER_PARSERS.get(targetType);
+        if (parser == null) {
+            log.warn("Неподдерживаемый тип: {}", targetType.getSimpleName());
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.ofNullable(targetType.cast(parser.apply(numberString.trim())));
+        } catch (NumberFormatException e) {
+            log.warn("Ошибка преобразования '{}' в {}", numberString, targetType.getSimpleName(), e);
+            return Optional.empty();
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

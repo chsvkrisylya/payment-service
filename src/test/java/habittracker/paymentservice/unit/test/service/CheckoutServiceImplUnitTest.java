@@ -15,14 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CheckoutServiceImplUnitTest {
@@ -52,7 +49,7 @@ class CheckoutServiceImplUnitTest {
         BigDecimal expectedAmount = new BigDecimal(amount);
 
         // Настройка поведения мока
-        when(numFormatter.stringToNum(amount, BigDecimal.class)).thenReturn(expectedAmount);
+        when(numFormatter.stringToNum(amount, BigDecimal.class)).thenReturn(Optional.of(expectedAmount));
 
         //Вызов тестируемого метода
         checkoutService.getNewTransactionRequest(amount, paymentMethodNonce);
@@ -69,12 +66,12 @@ class CheckoutServiceImplUnitTest {
         String invalidAmount = "invalid";
         String paymentMethodNonce = "fakeNonce";
 
-        when(numFormatter.stringToNum(invalidAmount, BigDecimal.class)).thenThrow(new NumberFormatException());
+        when(numFormatter.stringToNum(invalidAmount, BigDecimal.class)).thenReturn(Optional.empty());
 
         // Проверка выброса исключения
-        assertThrows(NumberFormatException.class, () -> {
-            checkoutService.getNewTransactionRequest(invalidAmount, paymentMethodNonce);
-        });
+        NumberFormatException exception = assertThrows(NumberFormatException.class,
+                () -> checkoutService.getNewTransactionRequest(invalidAmount, paymentMethodNonce));
+        assertEquals("Некорректный формат суммы: " + invalidAmount, exception.getMessage());
     }
 
     // Тест 3: Проверка генерации нового клиентского токена
