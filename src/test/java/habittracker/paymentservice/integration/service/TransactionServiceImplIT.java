@@ -80,7 +80,7 @@ class TransactionServiceImplIT {
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(wiremockPort));
         wireMockServer.start();
         WireMock.configureFor(wiremockHost, wiremockPort);
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")

@@ -76,7 +76,7 @@ class PlanServiceImplIT {
     @BeforeAll
     static void loadEnv() {
         // Загружаем переменные окружения
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")

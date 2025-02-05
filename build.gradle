@@ -103,12 +103,13 @@ springBoot {
     mainClass = 'habittracker.userservice.PaymentServiceApplication'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
 // Конфигурация JaCoCo
 jacoco {
     toolVersion = "0.8.10" // версия JaCoCo
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 test {

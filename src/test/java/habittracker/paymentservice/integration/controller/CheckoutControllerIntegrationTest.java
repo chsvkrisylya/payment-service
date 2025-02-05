@@ -52,7 +52,7 @@ class CheckoutControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
