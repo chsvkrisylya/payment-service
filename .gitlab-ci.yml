@@ -111,14 +111,7 @@ integration_tests:
     - echo "Running Integration tests..."
     - |
       gradle test --tests "*IntegrationTest" --continue \
-        -x :auth-service:test \
-        -x :user-service:test \
-        -x :habit-service:test \
-        -x :notification-service:test \
-        -x :api-gateway:test \
-        -x :payment-service:test \
-        -x :task-service:test \
-        -x :eureka-server:test \
+        -x :test \
         --parallel || {
       echo "На этапе Integration test, что-то пошло не так. Это нормальная часть рабочего процесса, посмотри внимательнее свой код, исправь и попробуй снова!"
       echo "Для того, чтобы посмотреть логи и артефакты джобы перейди по ссылке, найди свой merge_requests и в строке Pipeline кликни на крестик лкм,

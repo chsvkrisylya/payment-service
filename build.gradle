@@ -272,3 +272,10 @@ tasks.register('downloadWaitForIt') {
     }
 }
 
+// Запуск таски проверки для всех модулей. Проверка кода и тестов
+tasks.register('checkAllCheckstyles') {
+    description = 'Runs all Checkstyle tasks for main and test sources.'
+    group = 'verification'
+    dependsOn subprojects.collect { it.tasks.findByName('checkstyleMain') }
+    dependsOn subprojects.collect { it.tasks.findByName('checkstyleTest') }
+}
