@@ -1,14 +1,27 @@
 package habittracker.paymentservice.unit.test.service;
 
-import com.braintreegateway.*;
+import com.braintreegateway.Plan;
+import com.braintreegateway.Subscription;
+import com.braintreegateway.SubscriptionRequest;
+import com.braintreegateway.Result;
+import com.braintreegateway.SubscriptionGateway;
+import com.braintreegateway.BraintreeGateway;
+import com.braintreegateway.ResourceCollection;
+
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
 import habittracker.paymentservice.model.dto.SubscriptionRequestDTO;
 import habittracker.paymentservice.service.PlanServiceImpl;
 import habittracker.paymentservice.service.SubscriptionServiceImpl;
 import habittracker.paymentservice.service.util.NumFormatter;
-import org.junit.jupiter.api.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;

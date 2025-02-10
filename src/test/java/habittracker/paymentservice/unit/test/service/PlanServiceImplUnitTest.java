@@ -1,7 +1,11 @@
 package habittracker.paymentservice.unit.test.service;
 
 
-import com.braintreegateway.*;
+import com.braintreegateway.BraintreeGateway;
+import com.braintreegateway.Plan;
+import com.braintreegateway.PlanGateway;
+import com.braintreegateway.PlanRequest;
+import com.braintreegateway.Result;
 import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.PlanRequestDTO;
@@ -20,10 +24,16 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PlanServiceImplUnitTest {

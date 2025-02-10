@@ -1,6 +1,11 @@
 package habittracker.paymentservice.service;
 
-import com.braintreegateway.*;
+import com.braintreegateway.Plan;
+import com.braintreegateway.ResourceCollection;
+import com.braintreegateway.Result;
+import com.braintreegateway.Subscription;
+import com.braintreegateway.SubscriptionRequest;
+import com.braintreegateway.SubscriptionSearchRequest;
 import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
