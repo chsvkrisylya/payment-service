@@ -20,7 +20,7 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public String getNewClientToken() {
-        return BraintreeData.gateway.clientToken().generate();
+        return BraintreeData.getGateway().clientToken().generate();
     }
 
     @Override
@@ -37,19 +37,19 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public Result<Transaction> getTransactionSale(TransactionRequest request) {
-        return BraintreeData.gateway.transaction().sale(request);
+        return BraintreeData.getGateway().transaction().sale(request);
     }
 
     @Override
     public Status[] getTransactionSuccessStatuses() {
         return new Status[]{
-                Status.AUTHORIZED,
-                Status.AUTHORIZING,
-                Status.SETTLED,
-                Status.SETTLEMENT_CONFIRMED,
-                Status.SETTLEMENT_PENDING,
-                Status.SETTLING,
-                Status.SUBMITTED_FOR_SETTLEMENT
+                Transaction.Status.AUTHORIZED,
+                Transaction.Status.AUTHORIZING,
+                Transaction.Status.SETTLED,
+                Transaction.Status.SETTLEMENT_CONFIRMED,
+                Transaction.Status.SETTLEMENT_PENDING,
+                Transaction.Status.SETTLING,
+                Transaction.Status.SUBMITTED_FOR_SETTLEMENT
         };
     }
 

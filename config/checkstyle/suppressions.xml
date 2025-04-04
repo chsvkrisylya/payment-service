@@ -4,5 +4,7 @@
         "https://checkstyle.org/dtds/suppressions_1_2_xpath_experimental.dtd">
 
 <suppressions>
-
+    <suppress checks="EqualsHashCodeCheck" files="^(?!.*[\\/]src[\\/]main[\\/]java(?:[\\/].+)?[\\/]model[\\/]).*$"/>
+    <suppress checks="habittracker.staticanalysis.checkstyle.customrules.JUnitAndAssertCheck"
+              files=".*[\\/]src[\\/]test[\\/].*\\.java$"/>
 </suppressions>

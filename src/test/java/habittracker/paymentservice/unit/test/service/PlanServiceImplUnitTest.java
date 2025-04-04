@@ -10,6 +10,11 @@ import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.PlanRequestDTO;
 import habittracker.paymentservice.service.PlanServiceImpl;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,16 +23,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -66,7 +63,7 @@ class PlanServiceImplUnitTest {
         planService = new PlanServiceImpl();
         requestDto = new PlanRequestDTO("Basic Plan", BigDecimal.valueOf(9.99), "USD",
                 12, 1, false, 0, null);
-        BraintreeData.gateway = braintreeGateway;
+        BraintreeData.setGateway(braintreeGateway);
     }
 
     @Test
@@ -117,14 +114,14 @@ class PlanServiceImplUnitTest {
                 .name("Default")
                 .price(new BigDecimal("10.00"))
                 .currencyIsoCode("USD")
-                .numberOfBillingCycles(0)
+                .numberOfBillingCycles(1)
                 .billingFrequency(1)
                 .trialPeriod(false);
 
         PlanRequest result = planService.createDefaultPlanRequest();
         result.id("9ddd8ffa-c8a1-4201-a71a-78615c880109");
 
-        // Падает с assertEquals поэтому с сравнение c использованием AssertThat.
+        // Падает с assertEquals поэтому сравнение c использованием AssertThat.
         // Видимо параметры по-другому не сравнить
         assertThat(result).usingRecursiveComparison().isEqualTo(expectedValue);
     }
@@ -159,8 +156,7 @@ class PlanServiceImplUnitTest {
         when(braintreeGateway.plan()).thenReturn(planGateway);
 
         List<Plan> result = planService.getAllPlans();
-
-        assertEquals(result, expectedListPlan);
+        assertThat(expectedListPlan).isEqualTo(result);
     }
 
     @Test
@@ -171,9 +167,9 @@ class PlanServiceImplUnitTest {
         when(braintreeGateway.plan()).thenReturn(planGateway);
 
         Optional<Plan> result = planService.getPlanById(planId);
+        //Возвращаемый план должен присутствовать и совпадать
+        assertThat(result).contains(planMock).isPresent();
 
-        assertTrue(result.isPresent(), "План должен присутствовать");
-        assertEquals(planMock, result.get(), "Возвращаемый план должен совпадать");
         verify(braintreeGateway.plan()).find(planId);
     }
 
@@ -185,8 +181,8 @@ class PlanServiceImplUnitTest {
         when(braintreeGateway.plan()).thenReturn(planGateway);
 
         Optional<Plan> result = planService.getPlanById(planId);
+        assertThat(result).as("План должен отсутствовать").isNotPresent();
 
-        assertFalse(result.isPresent(), "План должен отсутствовать");
         verify(braintreeGateway.plan()).find(planId);
     }
 
@@ -197,9 +193,9 @@ class PlanServiceImplUnitTest {
         when(braintreeGateway.plan()).thenReturn(planGateway);
 
         Result<Plan> result = planService.updatePlanById("testId", testPlanRequest);
+        //Result<Plan> должен совпадать и план не должен быть null
+        assertThat(result).isEqualTo(expectedResultPlan).isNotNull();
 
-        assertNotNull(result, "План не должен быть null");
-        assertEquals(expectedResultPlan, result, "Result<Plan> должен совпадать");
         verify(braintreeGateway.plan()).update("testId", testPlanRequest);
     }
 
@@ -209,11 +205,10 @@ class PlanServiceImplUnitTest {
         when(braintreeGateway.plan()).thenReturn(planGateway);
         when(planGateway.all()).thenReturn(List.of());
 
-        NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> planService.updatePlanByName("testId", testPlanRequest),
-                "Ожидалось исключение NotFoundException");
-
-        assertEquals("План с именем 'testId' не найден.", exception.getMessage());
+        assertThatExceptionOfType(NotFoundException.class)
+                .as("Ожидалось исключение NotFoundException")
+                .isThrownBy(() -> planService.updatePlanByName("testId", testPlanRequest))
+                .withMessage("План с именем 'testId' не найден.");
 
         verify(planGateway).all(); // Проверяем, что метод all был вызван
         verify(planGateway, never()).update(anyString(), any()); // Проверяем, что метод update не был вызван

@@ -56,7 +56,7 @@ class TransactionControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
+        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)

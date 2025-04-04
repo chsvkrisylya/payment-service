@@ -21,8 +21,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -45,7 +47,7 @@ class CheckoutControllerUnitTest {
     @Test
     @DisplayName("Проверка перенаправления на /payment/checkouts")
     void testRedirectToCheckouts() {
-        assertEquals("redirect:payment/checkouts", checkoutController.root());
+        assertThat(checkoutController.root()).isEqualTo("redirect:payment/checkouts");
     }
 
     @Test
@@ -55,13 +57,12 @@ class CheckoutControllerUnitTest {
         when(checkoutService.getNewClientToken()).thenReturn(token);
 
         Model model = new ExtendedModelMap();
-
         String viewName = checkoutController.checkout(model);
-        assertEquals("checkouts/new", viewName);
 
-        assertEquals(token, model.getAttribute("clientToken"));
-
-        verify(checkoutService, times(1)).getNewClientToken();
+        assertThat(viewName).isEqualTo("checkouts/new");
+        assertThat(model.getAttribute("clientToken")).isEqualTo(token);
+        assertThatCode(() -> verify(checkoutService, times(1)).getNewClientToken())
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -89,7 +90,7 @@ class CheckoutControllerUnitTest {
         when(checkoutService.getTransactionSale(transactionRequest)).thenReturn(successfulResult);
 
         String result = checkoutController.postForm(amount, nonce, redirectAttributes);
-        assertEquals("redirect:/payment/checkouts/12345", result);
+        assertThat(result).isEqualTo("redirect:/payment/checkouts/12345");
     }
 
     @Test
@@ -117,7 +118,7 @@ class CheckoutControllerUnitTest {
         when(checkoutService.getTransactionSale(transactionRequest)).thenReturn(unSuccessfulResult);
 
         String result = checkoutController.postForm(amount, nonce, redirectAttributes);
-        assertEquals("redirect:/payment/checkouts/54321", result);
+        assertThat(result).isEqualTo("redirect:/payment/checkouts/54321");
     }
 
     @Test
@@ -145,9 +146,12 @@ class CheckoutControllerUnitTest {
         when(checkoutService.getValidationErrors(validationErrorResult)).thenReturn("some validation error");
 
         String result = checkoutController.postForm(amount, nonce, redirectAttributes);
-        assertEquals("redirect:/payment/checkouts", result);
+        assertThat(result).isEqualTo("redirect:/payment/checkouts");
 
-        assertEquals("some validation error", redirectAttributes.getFlashAttributes().get("errorDetails"));
+        String actualKey = "errorDetails";
+        String expectedValue = "some validation error";
+        assertThat((Map<String, String>) redirectAttributes.getFlashAttributes())
+                .containsEntry(actualKey, expectedValue);
     }
 
     @Test
@@ -159,9 +163,12 @@ class CheckoutControllerUnitTest {
         when(checkoutService.getNewTransactionRequest(amount, nonce)).thenThrow(new NumberFormatException());
 
         String result = checkoutController.postForm(amount, nonce, redirectAttributes);
-        assertEquals("redirect:/payment/checkouts", result);
-        assertEquals("Error: 81503: Amount is an invalid format.",
-                redirectAttributes.getFlashAttributes().get("errorDetails"));
+        assertThat(result).isEqualTo("redirect:/payment/checkouts");
+
+        String actualKey = "errorDetails";
+        String expectedValue = "Error: 81503: Amount is an invalid format.";
+        assertThat((Map<String, String>) redirectAttributes.getFlashAttributes())
+                .containsEntry(actualKey, expectedValue);
     }
 
     @Test
@@ -191,11 +198,12 @@ class CheckoutControllerUnitTest {
         when(transaction.getUpdatedAt()).thenReturn(updatedAt);
 
         String viewName = checkoutController.getTransaction(transactionId, model);
-        assertEquals("checkouts/show", viewName);
-
-        assertEquals(true, model.getAttribute("isSuccess"));
-        assertEquals(transaction, model.getAttribute("transaction"));
-        assertEquals(DateFormatter.dateToString(createdAt.getTime()), model.getAttribute("createdAt"));
-        assertEquals(DateFormatter.dateToString(updatedAt.getTime()), model.getAttribute("updatedAt"));
+        assertThat(viewName).isEqualTo("checkouts/show");
+        assertThat(model.getAttribute("isSuccess")).isEqualTo(true);
+        assertThat(model.getAttribute("transaction")).isEqualTo(transaction);
+        assertThat(model.getAttribute("createdAt"))
+                .isEqualTo(DateFormatter.dateToString(createdAt.getTime()));
+        assertThat(model.getAttribute("updatedAt"))
+                .isEqualTo(DateFormatter.dateToString(updatedAt.getTime()));
     }
 }

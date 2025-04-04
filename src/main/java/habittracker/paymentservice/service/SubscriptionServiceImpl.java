@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 @Service
@@ -70,22 +71,34 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Result<Subscription> createSubscription(SubscriptionRequest request) {
-        return BraintreeData.gateway.subscription().create(request);
+        return BraintreeData.getGateway().subscription().create(request);
     }
 
     @Override
     public Result<Subscription> createDefaultSubscription(String nonce) {
-        return BraintreeData.gateway.subscription().create(getDefaultSubscriptionRequest(nonce));
+        return BraintreeData.getGateway().subscription().create(getDefaultSubscriptionRequest(nonce));
     }
 
     @Override
     public List<SubscriptionInfoDTO> searchAll() {
-        SubscriptionSearchRequest searchRequest =
-                new SubscriptionSearchRequest().merchantAccountId().is("ntdd8c9v7v6jhtpn");
-        ResourceCollection<Subscription> collection = BraintreeData.gateway.subscription().search(searchRequest);
+        SubscriptionSearchRequest searchRequest = new SubscriptionSearchRequest()
+                .merchantAccountId().is("habittracker");
+
+        ResourceCollection<Subscription> collection = BraintreeData.getGateway()
+                .subscription()
+                .search(searchRequest);
 
         List<SubscriptionInfoDTO> subscriptionList = new ArrayList<>();
-        collection.forEach(subscription -> {
+
+        for (Subscription subscription : collection) {
+            // Безопасное форматирование дат
+            String nextBillingDate = formatDate(subscription.getNextBillingDate());
+            String firstBillingDate = formatDate(subscription.getFirstBillingDate());
+            String createdAt = formatDate(subscription.getCreatedAt());
+            String updatedAt = formatDate(subscription.getUpdatedAt());
+            String billingPeriodStartDate = formatDate(subscription.getBillingPeriodStartDate());
+            String billingPeriodEndDate = formatDate(subscription.getBillingPeriodEndDate());
+
             SubscriptionInfoDTO subscriptionInfo = new SubscriptionInfoDTO(
                     subscription.getId(),
                     subscription.getDescription(),
@@ -96,36 +109,41 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscription.getPrice(),
                     subscription.getPaymentMethodToken(),
                     subscription.getNumberOfBillingCycles(),
-                    DateFormatter.dateToString(subscription.getNextBillingDate().getTime()),
-                    DateFormatter.dateToString(subscription.getFirstBillingDate().getTime()),
+                    nextBillingDate,
+                    firstBillingDate,
                     subscription.getCurrentBillingCycle(),
-                    DateFormatter.dateToString(subscription.getCreatedAt().getTime()),
-                    DateFormatter.dateToString(subscription.getUpdatedAt().getTime()),
-                    DateFormatter.dateToString(subscription.getBillingPeriodStartDate().getTime()),
-                    DateFormatter.dateToString(subscription.getBillingPeriodEndDate().getTime()));
+                    createdAt,
+                    updatedAt,
+                    billingPeriodStartDate,
+                    billingPeriodEndDate
+            );
             subscriptionList.add(subscriptionInfo);
-        });
+        }
 
         return subscriptionList;
     }
 
     @Override
     public Subscription findSubscriptionById(String id) {
-        return BraintreeData.gateway.subscription().find(id);
+        return BraintreeData.getGateway().subscription().find(id);
     }
 
     @Override
     public Result<Subscription> updateSubscription(String id, SubscriptionRequest request) {
-        return BraintreeData.gateway.subscription().update(id, request);
+        return BraintreeData.getGateway().subscription().update(id, request);
     }
 
     @Override
     public Result<Subscription> cancelSubscription(String id) {
-        return BraintreeData.gateway.subscription().cancel(id);
+        return BraintreeData.getGateway().subscription().cancel(id);
     }
 
     @Override
     public Result<Subscription> deleteSubscription(String customerId, String id) {
-        return BraintreeData.gateway.subscription().delete(customerId, id);
+        return BraintreeData.getGateway().subscription().delete(customerId, id);
+    }
+
+    private String formatDate(Calendar date) {
+        return date != null ? DateFormatter.dateToString(date.getTime()) : "N/A";
     }
 }

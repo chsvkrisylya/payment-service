@@ -12,9 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PlanRequestDTOUnitTest {
 
@@ -59,14 +57,14 @@ class PlanRequestDTOUnitTest {
             name, price, currencyIsoCode, numOfCycles, billingFrequency,
             trialPeriod, trialDuration, durationUnit);
 
-    assertEquals(name, dto.getName());
-    assertEquals(price, dto.getPrice());
-    assertEquals(currencyIsoCode, dto.getCurrencyIsoCode());
-    assertEquals(numOfCycles, dto.getNumOfCycles());
-    assertEquals(billingFrequency, dto.getBillingFrequency());
-    assertTrue(dto.isTrialPeriod());
-    assertEquals(trialDuration, dto.getTrialDuration());
-    assertEquals(durationUnit, dto.getDurationUnit());
+    assertThat(dto.getName()).isEqualTo(name);
+    assertThat(dto.getPrice()).isEqualTo(price);
+    assertThat(dto.getCurrencyIsoCode()).isEqualTo(currencyIsoCode);
+    assertThat(dto.getNumOfCycles()).isEqualTo(numOfCycles);
+    assertThat(dto.getBillingFrequency()).isEqualTo(billingFrequency);
+    assertThat(dto.isTrialPeriod()).isTrue();
+    assertThat(dto.getTrialDuration()).isEqualTo(trialDuration);
+    assertThat(dto.getDurationUnit()).isEqualTo(durationUnit);
   }
 
   @Test
@@ -82,69 +80,95 @@ class PlanRequestDTOUnitTest {
     dto.setTrialDuration(7);
     dto.setDurationUnit(DurationUnit.MONTH);
 
-    assertEquals("New Plan", dto.getName());
-    assertEquals(new BigDecimal("99.99"), dto.getPrice());
-    assertEquals("EUR", dto.getCurrencyIsoCode());
-    assertEquals(6, dto.getNumOfCycles());
-    assertEquals(2, dto.getBillingFrequency());
-    assertFalse(dto.isTrialPeriod());
-    assertEquals(7, dto.getTrialDuration());
-    assertEquals(DurationUnit.MONTH, dto.getDurationUnit());
+    assertThat(dto.getName()).isEqualTo("New Plan");
+    assertThat(dto.getPrice()).isEqualTo(new BigDecimal("99.99"));
+    assertThat(dto.getCurrencyIsoCode()).isEqualTo("EUR");
+    assertThat(dto.getNumOfCycles()).isEqualTo(6);
+    assertThat(dto.getBillingFrequency()).isEqualTo(2);
+    assertThat(dto.isTrialPeriod()).isFalse();
+    assertThat(dto.getTrialDuration()).isEqualTo(7);
+    assertThat(dto.getDurationUnit()).isEqualTo(DurationUnit.MONTH);
   }
 
   // --- Тесты валидации ---
   @Test
   void testValidPlanRequestDTO() {
     Set<ConstraintViolation<PlanRequestDTO>> violations = validator.validate(planRequestDto);
-    assertTrue(violations.isEmpty(), "Expected no validation errors");
+    assertThat(violations).as("Expected no validation errors").isEmpty();
   }
 
   @Test
   void testInvalidName() {
     planRequestDto.setName("");
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("The range name of 1 to 100", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("The range name of 1 to 100");
   }
 
   @Test
   void testInvalidPrice() {
     planRequestDto.setPrice(BigDecimal.valueOf(-1.0));
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Price must be greater than zero", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Price must be greater than zero");
   }
 
   @Test
   void testInvalidCurrencyIsoCode() {
     planRequestDto.setCurrencyIsoCode("USDT");
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Currency ISO Code must be 3 characters", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Currency ISO Code must be 3 characters");
   }
 
   @Test
   void testInvalidNumOfCycles() {
     planRequestDto.setNumOfCycles(-1);
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Number of cycles must be at least 1", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Number of cycles must be at least 1");
   }
 
   @Test
   void testInvalidBillingFrequency() {
     planRequestDto.setBillingFrequency(-1);
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Billing frequency must be at least 1", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Billing frequency must be at least 1");
   }
 
   @Test
   void testInvalidTrialDuration() {
     planRequestDto.setTrialDuration(-1);
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Trial duration must be at least 0", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Trial duration must be at least 0");
   }
 
   @Test
   void testInvalidDurationUnit() {
     planRequestDto.setDurationUnit(null);
     violation = validator.validate(planRequestDto).iterator().next();
-    assertEquals("Duration unit cannot be null", violation.getMessage());
+    assertThat(violation.getMessage()).isEqualTo("Duration unit cannot be null");
+  }
+
+  @Test
+  void testBuilder() {
+    // Используем Builder для создания объекта
+    PlanRequestDTO planRequestDTO = PlanRequestDTO.builder()
+            .name("Test Plan")
+            .price(new BigDecimal("99.99"))
+            .currencyIsoCode("USD")
+            .numOfCycles(12)
+            .billingFrequency(1)
+            .trialPeriod(true)
+            .trialDuration(30)
+            .durationUnit(DurationUnit.MONTH)
+            .build();
+
+    // Проверяем, что объект был правильно создан
+    assertThat(planRequestDTO).isNotNull();
+    assertThat(planRequestDTO.getName()).isEqualTo("Test Plan");
+    assertThat(planRequestDTO.getPrice()).isEqualByComparingTo(new BigDecimal("99.99"));
+    assertThat(planRequestDTO.getCurrencyIsoCode()).isEqualTo("USD");
+    assertThat(planRequestDTO.getNumOfCycles()).isEqualTo(12);
+    assertThat(planRequestDTO.getBillingFrequency()).isEqualTo(1);
+    assertThat(planRequestDTO.isTrialPeriod()).isTrue();
+    assertThat(planRequestDTO.getTrialDuration()).isEqualTo(30);
+    assertThat(planRequestDTO.getDurationUnit()).isEqualTo(DurationUnit.MONTH);
   }
 }

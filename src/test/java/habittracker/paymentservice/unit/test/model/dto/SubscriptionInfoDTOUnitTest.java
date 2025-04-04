@@ -15,9 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SubscriptionInfoDTOUnitTest {
 
@@ -56,22 +54,22 @@ class SubscriptionInfoDTOUnitTest {
                 currentBillingCycle, createdAt, updatedAt, billingPeriodStartDate, billingPeriodEndDate);
 
         // Проверка значений через геттеры
-        assertEquals(id, dto.getId());
-        assertEquals(name, dto.getName());
-        assertEquals(merchantAccountId, dto.getMerchantAccountId());
-        assertEquals(planId, dto.getPlanId());
-        assertEquals(status, dto.getStatus());
-        assertEquals(transactions, dto.getTransactions());
-        assertEquals(price, dto.getPrice());
-        assertEquals(paymentMethodToken, dto.getPaymentMethodToken());
-        assertEquals(numberOfBillingCycles, dto.getNumberOfBillingCycles());
-        assertEquals(nextBillingDate, dto.getNextBillingDate());
-        assertEquals(firstBillingDate, dto.getFirstBillingDate());
-        assertEquals(currentBillingCycle, dto.getCurrentBillingCycle());
-        assertEquals(createdAt, dto.getCreatedAt());
-        assertEquals(updatedAt, dto.getUpdatedAt());
-        assertEquals(billingPeriodStartDate, dto.getBillingPeriodStartDate());
-        assertEquals(billingPeriodEndDate, dto.getBillingPeriodEndDate());
+        assertThat(dto.getId()).isEqualTo(id);
+        assertThat(dto.getName()).isEqualTo(name);
+        assertThat(dto.getMerchantAccountId()).isEqualTo(merchantAccountId);
+        assertThat(dto.getPlanId()).isEqualTo(planId);
+        assertThat(dto.getStatus()).isEqualTo(status);
+        assertThat(dto.getTransactions()).isEqualTo(transactions);
+        assertThat(dto.getPrice()).isEqualTo(price);
+        assertThat(dto.getPaymentMethodToken()).isEqualTo(paymentMethodToken);
+        assertThat(dto.getNumberOfBillingCycles()).isEqualTo(numberOfBillingCycles);
+        assertThat(dto.getNextBillingDate()).isEqualTo(nextBillingDate);
+        assertThat(dto.getFirstBillingDate()).isEqualTo(firstBillingDate);
+        assertThat(dto.getCurrentBillingCycle()).isEqualTo(currentBillingCycle);
+        assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(dto.getUpdatedAt()).isEqualTo(updatedAt);
+        assertThat(dto.getBillingPeriodStartDate()).isEqualTo(billingPeriodStartDate);
+        assertThat(dto.getBillingPeriodEndDate()).isEqualTo(billingPeriodEndDate);
     }
 
     @Test
@@ -88,8 +86,8 @@ class SubscriptionInfoDTOUnitTest {
         dto.setPrice(new BigDecimal("29.99"));
 
         // Проверка значений через геттеры
-        assertEquals(Status.ACTIVE, dto.getStatus());
-        assertEquals(new BigDecimal("29.99"), dto.getPrice());
+        assertThat(dto.getStatus()).isEqualTo(Status.ACTIVE);
+        assertThat(dto.getPrice()).isEqualTo(new BigDecimal("29.99"));
     }
 
     @Test
@@ -117,7 +115,7 @@ class SubscriptionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<SubscriptionInfoDTO>> violations = validator.validate(dto);
-        assertTrue(violations.isEmpty(), "DTO should pass validation");
+        assertThat((violations)).as("DTO should pass validation").isEmpty();
     }
 
     @Test
@@ -142,13 +140,17 @@ class SubscriptionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<SubscriptionInfoDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty(), "DTO should fail validation");
+        assertThat((violations)).as("DTO should pass validation").isNotEmpty();
 
         // Проверяем конкретные ошибки
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("ID cannot be blank")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Name cannot be blank")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Price must be greater than zero")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Status cannot be null")));
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("ID cannot be blank"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("Name cannot be blank"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("Price must be greater than zero"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("Status cannot be null"))).isTrue();
     }
 
     @Test
@@ -173,8 +175,9 @@ class SubscriptionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<SubscriptionInfoDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty(), "DTO should fail validation due to invalid price");
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Price must be greater than zero")));
+        assertThat((violations)).as("DTO should fail validation due to invalid price").isNotEmpty();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("Price must be greater than zero"))).isTrue();
     }
 
     @Test
@@ -199,8 +202,10 @@ class SubscriptionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<SubscriptionInfoDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty(), "DTO should fail validation due to invalid number of billing cycles");
-        assertTrue(violations.stream().anyMatch(v ->
-                v.getMessage().equals("Number of billing cycles must be at least 1")));
+        assertThat(violations)
+                .as("DTO should fail validation due to invalid number of billing cycles")
+                .isNotEmpty();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().equals("Number of billing cycles must be at least 1"))).isTrue();
     }
 }

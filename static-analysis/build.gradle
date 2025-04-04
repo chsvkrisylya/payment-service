@@ -1,0 +1,21 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'habittracker'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'com.puppycrawl.tools:checkstyle:10.12.4'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+}
+
+test {
+    useJUnitPlatform()
+}

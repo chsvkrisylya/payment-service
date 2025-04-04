@@ -6,12 +6,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @AllArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode
 public class SubscriptionRequestDTO {
 
     @NotBlank(message = "Name cannot be blank")

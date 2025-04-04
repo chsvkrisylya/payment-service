@@ -80,7 +80,7 @@ class TransactionServiceImplIT {
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(wiremockPort));
         wireMockServer.start();
         WireMock.configureFor(wiremockHost, wiremockPort);
-        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
+        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")
@@ -97,23 +97,23 @@ class TransactionServiceImplIT {
     @Test
     void testGetTransactionByBraintree() {
         Transaction mockTransaction = mock(Transaction.class);
-        when(BraintreeData.gateway.transaction().find("123")).thenReturn(mockTransaction);
+        when(BraintreeData.getGateway().transaction().find("123")).thenReturn(mockTransaction);
 
         Transaction result = transactionService.getTransactionByBraintree("123");
 
         assertNotNull(result, "Transaction should not be null");
-        verify(BraintreeData.gateway.transaction()).find("123");
+        verify(BraintreeData.getGateway().transaction()).find("123");
     }
 
     @Test
     void testRefundTransactionByBraintree() {
         Result<Transaction> mockResult = mock(Result.class);
-        when(BraintreeData.gateway.transaction().refund("123")).thenReturn(mockResult);
+        when(BraintreeData.getGateway().transaction().refund("123")).thenReturn(mockResult);
 
         Result<Transaction> result = transactionService.refundTransactionByBraintree("123");
 
         assertNotNull(result, "Refund result should not be null");
-        verify(BraintreeData.gateway.transaction()).refund("123");
+        verify(BraintreeData.getGateway().transaction()).refund("123");
     }
 
     @Test
@@ -178,23 +178,23 @@ class TransactionServiceImplIT {
     @Test
     void testVoidTransactionById() {
         Result<Transaction> mockResult = mock(Result.class);
-        when(BraintreeData.gateway.transaction().voidTransaction("123")).thenReturn(mockResult);
+        when(BraintreeData.getGateway().transaction().voidTransaction("123")).thenReturn(mockResult);
 
         Result<Transaction> result = transactionService.voidTransactionById("123");
 
         assertNotNull(result, "Void transaction result should not be null");
-        verify(BraintreeData.gateway.transaction()).voidTransaction("123");
+        verify(BraintreeData.getGateway().transaction()).voidTransaction("123");
     }
 
     @Test
     void testCancelTransactionById() {
         Result<Transaction> mockResult = mock(Result.class);
-        when(BraintreeData.gateway.transaction().cancelRelease("123")).thenReturn(mockResult);
+        when(BraintreeData.getGateway().transaction().cancelRelease("123")).thenReturn(mockResult);
 
         Result<Transaction> result = transactionService.cancelTransactionById("123");
 
         assertNotNull(result, "Cancel transaction result should not be null");
-        verify(BraintreeData.gateway.transaction()).cancelRelease("123");
+        verify(BraintreeData.getGateway().transaction()).cancelRelease("123");
     }
 
 }
