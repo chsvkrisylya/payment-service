@@ -2,26 +2,32 @@ package habittracker.paymentservice.model;
 
 import com.braintreegateway.BraintreeGateway;
 import com.braintreegateway.Environment;
-import lombok.AllArgsConstructor;
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.Getter;
 
 // это временный класс для токенизации
+// добавил конфигурацию через .env, можно добавить dependency injection через bean, но не уверен, что нужно
 @Getter
-@AllArgsConstructor
 public class BraintreeData {
 
-    private static final Environment ENV = Environment.SANDBOX;
-    // настройка транзакций sandbox для песочницы, production для реальных продаж
+    private static final Dotenv DOTENV = Dotenv
+            .configure()
+            .filename(".env")
+            .load();
 
-    private static final String MERCH = "ntdd8c9v7v6jhtpn"; // Merchant id - идентификатор продавца
+    private static final Environment ENV =
+            "sandbox".equals(DOTENV.get("BRAINTREE_ENV"))
+                    ? Environment.SANDBOX
+                    : Environment.PRODUCTION;
 
-    private static final String PUB_KEY = "npgkpwc74ntxjtwr";
-    // Public key - открытый ключ (ключ api braintree)
+    private static final String MERCH = DOTENV.get("BRAINTREE_MERCHANT_ID");
+    private static final String PUB_KEY = DOTENV.get("BRAINTREE_PUBLIC_KEY");
+    private static final String PR_KEY = DOTENV.get("BRAINTREE_PRIVATE_KEY");
 
-    private static final String PRIV_KEY = "ffa8548e17e3dd2b64135b2bd66d24d6";
-    // Private key - закрытый ключ (ключ сервера, наш сервер делает изменения используя аутентификацию по этому ключу)
+    private BraintreeData() {
+    }
 
-    public static BraintreeGateway gateway = new BraintreeGateway(ENV, MERCH, PUB_KEY, PRIV_KEY);
+    public static BraintreeGateway gateway = new BraintreeGateway(ENV, MERCH, PUB_KEY, PR_KEY);
 
     public static void setGateway(BraintreeGateway gateway) {
         BraintreeData.gateway = gateway;
