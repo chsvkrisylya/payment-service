@@ -47,7 +47,7 @@ import static org.mockito.Mockito.times;
 
 @SpringBootTest
 @Transactional
-class CheckoutServiceImplIT {
+class CheckoutServiceImplIIT {
     private static WireMockServer wireMockServer;
 
     @Container
