@@ -1,5 +1,6 @@
 package habittracker.paymentservice.integration;
 
+
 import com.braintreegateway.BraintreeGateway;
 import com.braintreegateway.Transaction;
 import com.braintreegateway.Result;
@@ -29,10 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
+
 import java.io.File;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,6 +59,7 @@ class CheckoutServiceImplIT {
     @Autowired
     private CheckoutServiceImpl checkoutService;
 
+    //Мок
     @Mock
     private ClientTokenGateway clientTokenGateway;
 
@@ -69,9 +72,9 @@ class CheckoutServiceImplIT {
 
     @BeforeEach
     public void setUp() {
-        BraintreeGateway mockGateway = mock(BraintreeGateway.class);
-        when(mockGateway.clientToken()).thenReturn(clientTokenGateway);
-        BraintreeData.setGateway(mockGateway);
+        // Инициализация мока BraintreeData.gateway для теста
+        BraintreeData.gateway = mock(BraintreeGateway.class);
+        when(BraintreeData.gateway.clientToken()).thenReturn(clientTokenGateway);
     }
 
     @BeforeAll
@@ -98,13 +101,9 @@ class CheckoutServiceImplIT {
     @Test
     void testGetNewClientToken() {
         String expectedToken = "testClientToken";
-        when(clientTokenGateway.generate()).thenReturn(expectedToken);
-        String actualToken = checkoutService.getNewClientToken();
-        assertThat(actualToken)
-                .as("Проверка генерации клиентского токена")
-                .isEqualTo(expectedToken)
-                .isNotBlank();
-        //хотя times(1) можно не указывать - дефолтное значение в mockito
+        when(BraintreeData.gateway.clientToken().generate()).thenReturn(expectedToken);
+        String result = checkoutService.getNewClientToken();
+        assertEquals(expectedToken, result);
         verify(clientTokenGateway, times(1)).generate();
     }
 
@@ -149,31 +148,24 @@ class CheckoutServiceImplIT {
 
     @Test
     void testGetTransactionSale() {
+        TransactionRequest request = mock((TransactionRequest.class));
+        Result<Transaction> result = mock(Result.class);
 
-        TransactionRequest request = mock(TransactionRequest.class);
-        Result<Transaction> mockResult = mock(Result.class);
+        // Мокаем успешный результат транзакции
         Transaction testTransaction = mock(Transaction.class);
+        when(result.isSuccess()).thenReturn(true);
+        when(result.getTarget()).thenReturn(testTransaction);
+
         TransactionGateway transactionGateway = mock(TransactionGateway.class);
-
-        when(mockResult.isSuccess()).thenReturn(true);
-        when(mockResult.getTarget()).thenReturn(testTransaction);
-        when(transactionGateway.sale(request)).thenReturn(mockResult);
-
-        BraintreeGateway braintreeGateway = mock(BraintreeGateway.class);
-        when(braintreeGateway.transaction()).thenReturn(transactionGateway);
-        BraintreeData.setGateway(braintreeGateway); // Важно!
+        when(BraintreeData.gateway.transaction()).thenReturn(transactionGateway);
+        when(transactionGateway.sale(request)).thenReturn(result);
 
         Result<Transaction> transactionResult = checkoutService.getTransactionSale(request);
 
-        assertThat(transactionResult)
-                .as("Проверка успешной транзакции")
-                .isNotNull()
-                .satisfies(result -> {
-                    assertThat(result.isSuccess()).isTrue();
-                    assertThat(result.getTarget()).isEqualTo(testTransaction);
-                });
-
-        verify(transactionGateway, times(1)).sale(request);
+        // Проверяем, что метод вернул успешный результат
+        assertNotNull(transactionResult);
+        assertTrue(transactionResult.isSuccess());
+        assertEquals(testTransaction, transactionResult.getTarget());
     }
 
     @Test
