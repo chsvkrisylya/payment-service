@@ -101,7 +101,7 @@ class PlanServiceImplIT {
         assertNotNull(result, "Result should not be null");
         assertTrue(result.isSuccess(), "Result should indicate success");
 
-        // Получаем созданный план, ля-ля-ля-ля-ля
+        // Получаем созданный план
         Plan createdPlan = result.getTarget();
         assertNotNull(createdPlan, "Created plan should not be null");
         assertEquals("plan_123", createdPlan.getId(), "Plan ID should match");
