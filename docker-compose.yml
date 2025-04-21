@@ -5,7 +5,7 @@ services:
     image: postgres:16
     restart: always
     env_file:
-      - ../.env
+      - ./.env
     environment:
       POSTGRES_USER: ${PAYMENT_SERVICE_DB_USER}
       POSTGRES_PASSWORD: ${PAYMENT_SERVICE_DB_PASSWORD}
