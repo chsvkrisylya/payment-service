@@ -1,9 +1,11 @@
 package habittracker.paymentservice;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import lombok.Generated;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Generated
 @SpringBootApplication(scanBasePackages = "habittracker.paymentservice")
 public class PaymentServiceApplication {
 

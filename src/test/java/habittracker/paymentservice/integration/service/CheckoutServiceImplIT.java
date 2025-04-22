@@ -1,4 +1,4 @@
-package habittracker.paymentservice.integration;
+package habittracker.paymentservice.integration.service;
 
 
 import com.braintreegateway.BraintreeGateway;
@@ -72,8 +72,8 @@ class CheckoutServiceImplIT {
     @BeforeEach
     public void setUp() {
         // Инициализация мока BraintreeData.gateway для теста
-        BraintreeData.gateway = mock(BraintreeGateway.class);
-        when(BraintreeData.gateway.clientToken()).thenReturn(clientTokenGateway);
+        BraintreeData.setGateway(mock(BraintreeGateway.class));
+        when(BraintreeData.getGateway().clientToken()).thenReturn(clientTokenGateway);
     }
 
     @BeforeAll
@@ -83,7 +83,7 @@ class CheckoutServiceImplIT {
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(wiremockPort));
         wireMockServer.start();
         WireMock.configureFor(wiremockHost, wiremockPort);
-        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
+        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")
@@ -100,7 +100,7 @@ class CheckoutServiceImplIT {
     @Test
     void testGetNewClientToken() {
         String expectedToken = "testClientToken";
-        when(BraintreeData.gateway.clientToken().generate()).thenReturn(expectedToken);
+        when(BraintreeData.getGateway().clientToken().generate()).thenReturn(expectedToken);
         String result = checkoutService.getNewClientToken();
         assertEquals(expectedToken, result);
         verify(clientTokenGateway, times(1)).generate();
@@ -147,7 +147,7 @@ class CheckoutServiceImplIT {
 
     @Test
     void testGetTransactionSale() {
-        TransactionRequest request = mock((TransactionRequest.class));
+        TransactionRequest request = mock(TransactionRequest.class);
         Result<Transaction> result = mock(Result.class);
 
         // Мокаем успешный результат транзакции
@@ -156,7 +156,7 @@ class CheckoutServiceImplIT {
         when(result.getTarget()).thenReturn(testTransaction);
 
         TransactionGateway transactionGateway = mock(TransactionGateway.class);
-        when(BraintreeData.gateway.transaction()).thenReturn(transactionGateway);
+        when(BraintreeData.getGateway().transaction()).thenReturn(transactionGateway);
         when(transactionGateway.sale(request)).thenReturn(result);
 
         Result<Transaction> transactionResult = checkoutService.getTransactionSale(request);

@@ -17,18 +17,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction getTransactionByBraintree(String transactionId) {
-        return BraintreeData.gateway.transaction().find(transactionId);
+        return BraintreeData.getGateway().transaction().find(transactionId);
     }
 
     @Override
     public Result<Transaction> refundTransactionByBraintree(String transactionId) {
-        return BraintreeData.gateway.transaction().refund(transactionId);
+        return BraintreeData.getGateway().transaction().refund(transactionId);
     }
 
     @Override
     public List<TransactionInfoDTO> getTransactionsBySearchRequest() {
         TransactionSearchRequest request = new TransactionSearchRequest().creditCardNumber().startsWith("4111");
-        ResourceCollection<Transaction> collection = BraintreeData.gateway.transaction().search(request);
+        ResourceCollection<Transaction> collection = BraintreeData.getGateway().transaction().search(request);
 
         List<TransactionInfoDTO> transactionList = new ArrayList<>();
         collection.forEach(transaction -> {
@@ -51,11 +51,11 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Result<Transaction> voidTransactionById(String transactionId) {
-        return BraintreeData.gateway.transaction().voidTransaction(transactionId);
+        return BraintreeData.getGateway().transaction().voidTransaction(transactionId);
     }
 
     @Override
     public Result<Transaction> cancelTransactionById(String transactionId) {
-        return BraintreeData.gateway.transaction().cancelRelease(transactionId);
+        return BraintreeData.getGateway().transaction().cancelRelease(transactionId);
     }
 }

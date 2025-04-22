@@ -2,12 +2,14 @@ package habittracker.paymentservice.model;
 
 import com.braintreegateway.BraintreeGateway;
 import com.braintreegateway.Environment;
-import io.github.cdimascio.dotenv.Dotenv;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.UtilityClass;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 // это временный класс для токенизации
-// добавил конфигурацию через .env, можно добавить dependency injection через bean, но не уверен, что нужно
-@Getter
+@UtilityClass
+@EqualsAndHashCode
 public class BraintreeData {
 
     private static final Dotenv DOTENV = Dotenv
@@ -15,10 +17,8 @@ public class BraintreeData {
             .filename(".env")
             .load();
 
-    private static final Environment ENV =
-            "sandbox".equals(DOTENV.get("BRAINTREE_ENV"))
-                    ? Environment.SANDBOX
-                    : Environment.PRODUCTION;
+    private static final String MERCH = "ntdd8c9v7v6jhtpn";
+    // Merchant id - идентификатор продавца
 
     private static final String MERCH = DOTENV.get("BRAINTREE_MERCHANT_ID");
     private static final String PUB_KEY = DOTENV.get("BRAINTREE_PUBLIC_KEY");
@@ -27,10 +27,15 @@ public class BraintreeData {
     private BraintreeData() {
     }
 
-    public static BraintreeGateway gateway = new BraintreeGateway(ENV, MERCH, PUB_KEY, PR_KEY);
+    private static final AtomicReference<BraintreeGateway> GATEWAY =
+            new AtomicReference<>(new BraintreeGateway(ENV, MERCH, PUB_KEY, PRIV_KEY));
 
-    public static void setGateway(BraintreeGateway gateway) {
-        BraintreeData.gateway = gateway;
+    public static BraintreeGateway getGateway() {
+        return GATEWAY.get();
+    }
+
+    public static void setGateway(BraintreeGateway newGateway) {
+        GATEWAY.set(newGateway);
     }
 
     // сайт песочницы https://sandbox.braintreegateway.com/

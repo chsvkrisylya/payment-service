@@ -39,6 +39,15 @@
         <property name="message" value="Закомментированные многострочные блоки кода не допускаются." />
     </module>
 
+    <!-- Проверка тестов на наличие аннотации @DisplayName. Допускаются другие аннотации между @Test и @DisplayName -->
+<!--    <module name="RegexpMultiline">-->
+<!--        <property name="format" value="@\bTest\b(?:\s*\([^()]*\))?+(?!(?:\s*\n\s*@(?!DisplayName\b)[^\n]*)*\s*\n\s*@DisplayName)" />-->
+<!--        <property name="message" value="Метод с @Test должен иметь аннотацию @DisplayName в пределах блока аннотаций под @Test." />-->
+<!--        <property name="severity" value="warning" />-->
+<!--        <property name="fileExtensions" value="java" />-->
+<!--    </module>-->
+
+
     <module name="TreeWalker">
 
         <module name="EmptyLineSeparator"> <!-- Java Style Guide: Source file structure -->
@@ -138,6 +147,16 @@
         <module name="EmptyBlock">
             <property name="tokens" value="LITERAL_CATCH"/>
         </module>
+
+        <!-- Новое правило: Проверка наличия @Column(xxx = "nnn") у полей -->
+        <module name="habittracker.staticanalysis.checkstyle.customrules.ColumnAnnotationCheck"/>
+
+        <!--Проверка в моделях данных на наличие equals, hashcode        -->
+        <module name="habittracker.staticanalysis.checkstyle.customrules.EqualsHashCodeCheck"/>
+
+        <!--Проверка на использование JUnit аннотаций и AseertJ-->
+<!--        раскомментировать перед проверкой !-->
+<!--       <module name="habittracker.staticanalysis.checkstyle.customrules.JUnitAndAssertCheck"/>-->
     </module>
 
     <!-- Проверка подавления -->

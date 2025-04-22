@@ -1,12 +1,13 @@
 package habittracker.paymentservice.unit.test.service;
 
 import com.braintreegateway.Plan;
+import com.braintreegateway.ResourceCollection;
+import com.braintreegateway.Result;
 import com.braintreegateway.Subscription;
 import com.braintreegateway.SubscriptionRequest;
-import com.braintreegateway.Result;
+import com.braintreegateway.SubscriptionSearchRequest;
 import com.braintreegateway.SubscriptionGateway;
 import com.braintreegateway.BraintreeGateway;
-import com.braintreegateway.ResourceCollection;
 
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
@@ -18,23 +19,26 @@ import habittracker.paymentservice.service.util.NumFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.AfterEach;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceUnitTest {
@@ -58,7 +62,10 @@ class SubscriptionServiceUnitTest {
     private Result<Subscription> expectedResult;
 
     @Mock
-    private ResourceCollection<Subscription> resourceCollectionExpectedResult;
+    private ResourceCollection<Subscription> resourceCollection;
+
+    @Mock
+    private Subscription subscription;
 
     @InjectMocks
     private SubscriptionServiceImpl subscriptionService;
@@ -71,12 +78,12 @@ class SubscriptionServiceUnitTest {
         testSubscriptionRequest = new SubscriptionRequest();
         testsubscriptionRequestDTO = new SubscriptionRequestDTO("TestName", "10", "TestNonce",
                 1, true, 2, Subscription.DurationUnit.MONTH);
-        BraintreeData.gateway = braintreeGateway;
+        BraintreeData.setGateway(braintreeGateway);
     }
 
     @AfterEach
     void tearDown() {
-        BraintreeData.gateway = null;
+        BraintreeData.setGateway(null);
     }
 
     @ParameterizedTest
@@ -89,9 +96,9 @@ class SubscriptionServiceUnitTest {
 
         testsubscriptionRequestDTO.setTrialPeriod(trialPeriod);
 
-        Mockito.when(planMock.getId()).thenReturn("planId");
-        Mockito.when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
-        Mockito.when(numFormatter.stringToNum(testsubscriptionRequestDTO.getStrPrice(), BigDecimal.class))
+        when(planMock.getId()).thenReturn("planId");
+        when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
+        when(numFormatter.stringToNum(testsubscriptionRequestDTO.getStrPrice(), BigDecimal.class))
                 .thenReturn(Optional.of(BigDecimal.valueOf(10)));
 
         var expectedResultSubscription = testSubscriptionRequest
@@ -119,8 +126,8 @@ class SubscriptionServiceUnitTest {
 
         testsubscriptionRequestDTO.setName("Default");
 
-        Mockito.when(planMock.getId()).thenReturn("Default");
-        Mockito.when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
+        when(planMock.getId()).thenReturn("Default");
+        when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
 
         var expectedResultDefaultSubscription = new SubscriptionRequest()
                 .planId("Default")
@@ -142,9 +149,9 @@ class SubscriptionServiceUnitTest {
     @DisplayName("createSubscription -> create subscription")
     void createSubscription() {
 
-        SubscriptionRequest subscriptionRequest = Mockito.mock(SubscriptionRequest.class);
-        Mockito.when(subscriptionGateway.create(any())).thenReturn(expectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        SubscriptionRequest subscriptionRequest = mock(SubscriptionRequest.class);
+        when(subscriptionGateway.create(any())).thenReturn(expectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
 
         Result<Subscription> actualResult = subscriptionService.createSubscription(subscriptionRequest);
 
@@ -157,10 +164,10 @@ class SubscriptionServiceUnitTest {
 
         testsubscriptionRequestDTO.setName("Default");
 
-        Mockito.when(planMock.getId()).thenReturn("Default");
-        Mockito.when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
-        Mockito.when(subscriptionGateway.create(any())).thenReturn(expectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        when(planMock.getId()).thenReturn("Default");
+        when(planService.getPlanByName(testsubscriptionRequestDTO.getName())).thenReturn(Optional.of(planMock));
+        when(subscriptionGateway.create(any())).thenReturn(expectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
 
         Result<Subscription> actualResult = subscriptionService.createDefaultSubscription("nonce");
 
@@ -170,23 +177,32 @@ class SubscriptionServiceUnitTest {
     @Test
     @DisplayName("searchAllSubscription -> search all subscription")
     void searchAllSubscription() {
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        when(subscriptionGateway.search(any(SubscriptionSearchRequest.class))).thenReturn(resourceCollection);
+        when(resourceCollection.iterator())
+                .thenAnswer(invocation -> Collections.singletonList(subscription).iterator());
 
-        Mockito.when(subscriptionGateway.search(any())).thenReturn(resourceCollectionExpectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        when(subscription.getId()).thenReturn("sub_123");
+        when(subscription.getDescription()).thenReturn("Test Subscription");
+        when(subscription.getMerchantAccountId()).thenReturn("habittracker");
+        when(subscription.getPlanId()).thenReturn("plan_456");
+        when(subscription.getStatus()).thenReturn(Subscription.Status.ACTIVE);
+        when(subscription.getPrice()).thenReturn(new BigDecimal("19.99"));
+        when(subscription.getPaymentMethodToken()).thenReturn("token_789");
+        when(subscription.getNumberOfBillingCycles()).thenReturn(12);
 
-        List<SubscriptionInfoDTO> actualResult = subscriptionService.searchAll();
-
-        Assertions.assertTrue(actualResult.isEmpty());
-        Assertions.assertNotNull(actualResult);
+        List<SubscriptionInfoDTO> result = subscriptionService.searchAll();
+        assertThat(result).hasSize(1).isNotNull();
+        assertThat(result.getFirst().getId()).isEqualTo("sub_123");
     }
 
     @Test
     @DisplayName("returnFindSubscriptionById -> find subscription by id")
     void returnFindSubscriptionById() {
 
-        Subscription subscriptionExpectedResult = Mockito.mock(Subscription.class);
-        Mockito.when(subscriptionGateway.find(any())).thenReturn(subscriptionExpectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        Subscription subscriptionExpectedResult = mock(Subscription.class);
+        when(subscriptionGateway.find(any())).thenReturn(subscriptionExpectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
 
         Subscription actualResult = subscriptionService.findSubscriptionById("test");
 
@@ -197,9 +213,9 @@ class SubscriptionServiceUnitTest {
     @DisplayName("UpdateSubscriptionById -> update subscription by id")
     void updateSubscriptionById() {
 
-        Mockito.when(subscriptionGateway.update(any(), any())).thenReturn(expectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
-        SubscriptionRequest subscriptionRequest = Mockito.mock(SubscriptionRequest.class);
+        when(subscriptionGateway.update(any(), any())).thenReturn(expectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        SubscriptionRequest subscriptionRequest = mock(SubscriptionRequest.class);
 
         Result<Subscription> actualResult = subscriptionService.updateSubscription("10", subscriptionRequest);
 
@@ -210,8 +226,8 @@ class SubscriptionServiceUnitTest {
     @DisplayName("cancelSubscriptionById -> cancel subscription by id")
     void cancelSubscriptionById() {
 
-        Mockito.when(subscriptionGateway.cancel(any())).thenReturn(expectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        when(subscriptionGateway.cancel(any())).thenReturn(expectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
 
         Result<Subscription> actualResult = subscriptionService.cancelSubscription("10");
 
@@ -222,8 +238,8 @@ class SubscriptionServiceUnitTest {
     @DisplayName("deleteSubscriptionById -> delete subscription by id")
     void deleteSubscriptionById() {
 
-        Mockito.when(subscriptionGateway.delete(any(), any())).thenReturn(expectedResult);
-        Mockito.when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
+        when(subscriptionGateway.delete(any(), any())).thenReturn(expectedResult);
+        when(braintreeGateway.subscription()).thenReturn(subscriptionGateway);
 
         Result<Subscription> actualResult = subscriptionService.deleteSubscription("10", "12");
 

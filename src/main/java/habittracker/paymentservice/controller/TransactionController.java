@@ -1,5 +1,8 @@
 package habittracker.paymentservice.controller;
 
+import com.braintreegateway.Result;
+import com.braintreegateway.Transaction;
+import habittracker.paymentservice.model.dto.TransactionInfoDTO;
 import habittracker.paymentservice.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,19 +30,19 @@ public class TransactionController {
 
     @GetMapping("/show/{transactionId}")
     @Operation(summary = "Get transaction by id from Braintree Data Base")
-    public ResponseEntity<?> getTransactionByBraintree(@PathVariable String transactionId) {
+    public ResponseEntity<Transaction> getTransactionByBraintree(@PathVariable String transactionId) {
         return ResponseEntity.ok(transactionService.getTransactionByBraintree(transactionId));
     }
 
     @GetMapping("/search")
     @Operation(summary = "Get all transactions where a card number starting with \"4111\" from Braintree Data Base")
-    public ResponseEntity<?> getTransactionsBySearchRequest() {
+    public ResponseEntity<List<TransactionInfoDTO>> getTransactionsBySearchRequest() {
         return ResponseEntity.ok(transactionService.getTransactionsBySearchRequest());
     }
 
     @PostMapping("/refund")
     @Operation(summary = "Make a refund of the transaction")
-    public ResponseEntity<?> refundTransactionByBraintree(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Result<Transaction>> refundTransactionByBraintree(@RequestBody Map<String, String> body) {
         String transactionId = body.get("id");
         log.info("возврат по id = " + transactionId);
         return ResponseEntity.ok(transactionService.refundTransactionByBraintree(transactionId));
@@ -46,7 +50,7 @@ public class TransactionController {
 
     @PostMapping("/void")
     @Operation(summary = "Void the transaction")
-    public ResponseEntity<?> voidTransaction(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Result<Transaction>> voidTransaction(@RequestBody Map<String, String> body) {
         String transactionId = body.get("id");
         log.info("анулирование по id = " + transactionId);
         return ResponseEntity.ok(transactionService.voidTransactionById(transactionId));
@@ -54,7 +58,7 @@ public class TransactionController {
 
     @PostMapping("/cancel")
     @Operation(summary = "Cancel the transaction")
-    public ResponseEntity<?> cancelTransaction(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Result<Transaction>> cancelTransaction(@RequestBody Map<String, String> body) {
         String transactionId = body.get("id");
         log.info("отмена по id = " + transactionId);
         return ResponseEntity.ok(transactionService.cancelTransactionById(transactionId));

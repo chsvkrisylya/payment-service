@@ -1,15 +1,21 @@
 package habittracker.paymentservice.integration.controller;
 
+import com.braintreegateway.Result;
 import com.braintreegateway.Subscription;
+import com.braintreegateway.SubscriptionRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
+import habittracker.paymentservice.model.dto.SubscriptionRequestDTO;
 import habittracker.paymentservice.service.SubscriptionService;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,11 +27,12 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.math.BigDecimal;
-
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,7 +63,7 @@ class SubscriptionControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getPath();
+        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
@@ -75,7 +82,7 @@ class SubscriptionControllerIntegrationTest {
                         "Merchant123",
                         "PlanA",
                         Subscription.Status.ACTIVE,
-                        List.of(), // пустой список транзакций
+                        List.of(),
                         BigDecimal.valueOf(100.0),
                         "Token123",
                         12,
@@ -98,7 +105,6 @@ class SubscriptionControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].merchantAccountId").value("Merchant123"))
                 .andExpect(jsonPath("$[0].planId").value("PlanA"))
                 .andExpect(jsonPath("$[0].status").value(Subscription.Status.ACTIVE.name()))
-                // Проверяем строковое имя перечисления
                 .andExpect(jsonPath("$[0].price").value(100.0))
                 .andExpect(jsonPath("$[0].paymentMethodToken").value("Token123"))
                 .andExpect(jsonPath("$[0].numberOfBillingCycles").value(12))
@@ -109,5 +115,101 @@ class SubscriptionControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].updatedAt").value("2023-01-01"))
                 .andExpect(jsonPath("$[0].billingPeriodStartDate").value("2023-01-01"))
                 .andExpect(jsonPath("$[0].billingPeriodEndDate").value("2023-01-01"));
+    }
+
+    @Test
+    void testGetSubscriptionById() throws Exception {
+        Subscription mockSubscription = Mockito.mock(Subscription.class);
+        when(subscriptionService.findSubscriptionById("1")).thenReturn(mockSubscription);
+
+        mockMvc.perform(get("/api/subscription/search/id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("\"1\""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetDefaultSubscriptionRequest() throws Exception {
+        SubscriptionRequest mockRequest = new SubscriptionRequest();
+        when(subscriptionService.getDefaultSubscriptionRequest("nonce123")).thenReturn(mockRequest);
+
+        mockMvc.perform(get("/api/subscription/request/default")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("\"nonce123\""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCreateSubscriptionRequest() throws Exception {
+        SubscriptionRequestDTO requestDTO = new SubscriptionRequestDTO(
+                "Test Subscription",
+                "100.00",
+                "nonce123",
+                12,
+                false,
+                0,
+                Subscription.DurationUnit.MONTH
+        );
+
+        SubscriptionRequest mockRequest = Mockito.mock(SubscriptionRequest.class);
+        when(subscriptionService.createSubscriptionRequest(requestDTO)).thenReturn(mockRequest);
+
+        mockMvc.perform(get("/api/subscription/request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(requestDTO)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCreateSubscription() throws Exception {
+        SubscriptionRequest request = new SubscriptionRequest();
+        Result<Subscription> mockResult = new Result<>();
+        when(subscriptionService.createSubscription(request)).thenReturn(mockResult);
+
+        mockMvc.perform(post("/api/subscription/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCreateDefaultSubscription() throws Exception {
+        Result<Subscription> mockResult = new Result<>();
+        when(subscriptionService.createDefaultSubscription("nonce123")).thenReturn(mockResult);
+
+        mockMvc.perform(post("/api/subscription/create/default")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("\"nonce123\""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCancelSubscription() throws Exception {
+        Result<Subscription> mockResult = new Result<>();
+        when(subscriptionService.cancelSubscription("1")).thenReturn(mockResult);
+
+        mockMvc.perform(post("/api/subscription/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testDeleteSubscription() throws Exception {
+        Result<Subscription> mockResult = new Result<>();
+        when(subscriptionService.deleteSubscription("customer123", "1")).thenReturn(mockResult);
+
+        mockMvc.perform(post("/api/subscription/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(Map.of("customerId", "customer123", "id", "1"))))
+                .andExpect(status().isOk());
+    }
+
+    private static String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

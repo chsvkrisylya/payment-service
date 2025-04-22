@@ -11,6 +11,7 @@ import habittracker.paymentservice.model.dto.TransactionInfoDTO;
 import habittracker.paymentservice.service.TransactionServiceImpl;
 import habittracker.paymentservice.service.util.DateFormatter;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,10 +23,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.function.Consumer;
 
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,11 +54,12 @@ class TransactionServiceImplUnitTest {
     public void setUp() {
         transactionService = new TransactionServiceImpl();
 
-        BraintreeData.gateway = braintreeGateway;
+        BraintreeData.setGateway(braintreeGateway);
         when(braintreeGateway.transaction()).thenReturn(transactionGateway);
     }
 
     @Test
+    @DisplayName("getTransactionByBraintree -> should return transaction by id")
     void testGetTransactionByBraintree() {
         //тестовые данные
         String transactionId = "test-transaction-id";
@@ -70,12 +69,14 @@ class TransactionServiceImplUnitTest {
         Transaction result = transactionService.getTransactionByBraintree(transactionId);
 
         //asserting
-        assertNotNull(result, "Transaction not found");
-        assertEquals(result, mockTransaction, "Transactions are different");
+        assertThat(result).as("Transaction not found").isNotNull();
+        assertThat(mockTransaction).as("Transactions are different").isEqualTo(result);
+
         verify(transactionGateway).find(transactionId);
     }
 
     @Test
+    @DisplayName("refundTransactionByBraintree -> should refund transaction")
     void testRefundTransactionByBraintree() {
         //given
         String transactionId = "test-transaction-id";
@@ -85,18 +86,20 @@ class TransactionServiceImplUnitTest {
         Result<Transaction> result = transactionService.refundTransactionByBraintree(transactionId);
 
         //asserting
-        assertNotNull(result, "Transaction not found");
-        assertEquals(result, mockResult, "Transactions are different");
+        assertThat(result).as("Transaction not found").isNotNull();
+        assertThat(mockResult).as("Transactions are different").isEqualTo(result);
+
         verify(transactionGateway).refund(transactionId);
     }
 
     @Test
+    @DisplayName("getTransactionBySearchRequest -> should return transaction DTOs by search request")
     void testGetTransactionsBySearchRequest() {
         //given
         String transactionId = "test-transaction-id";
         Calendar createdAt = Calendar.getInstance();
         Transaction.Type type = Transaction.Type.SALE;
-        BigDecimal amount = new BigDecimal(100.00);
+        BigDecimal amount = new BigDecimal("100.00");
         Transaction.Status status = Transaction.Status.SETTLED;
         String refundedTransactionId = null;
 
@@ -119,21 +122,21 @@ class TransactionServiceImplUnitTest {
 
         //asserting
         verify(transactionGateway).search(any(TransactionSearchRequest.class));
-        assertNotNull(result, "Transaction not found");
-        assertEquals(1, result.size(), "Transactions not found");
+        assertThat(result).as("Transactions not found").hasSize(1).as("Transaction not found").isNotNull();
+
         TransactionInfoDTO transactionInfoDTO = result.getFirst();
-        assertEquals(transactionId, transactionInfoDTO.getId(), "Transaction not found");
-        assertEquals(DateFormatter.dateToString(createdAt.getTime()), transactionInfoDTO.getCreatedAt(),
-                "Transactions not found");
-        assertEquals(type, transactionInfoDTO.getType(), "Transaction not found");
-        assertEquals(amount, transactionInfoDTO.getAmount(), "Transaction not found");
-        assertEquals(status, transactionInfoDTO.getStatus(), "Transaction not found");
-        assertEquals(refundedTransactionId, transactionInfoDTO.getRefundedTransactionId(),
-                "Transaction not found");
-        assertFalse(transactionInfoDTO.isRefund(), "Transaction are not refunded");
+        // Transaction not found
+        assertThat(transactionInfoDTO.getId()).isEqualTo(transactionId);
+        assertThat(transactionInfoDTO.getCreatedAt()).isEqualTo(DateFormatter.dateToString(createdAt.getTime()));
+        assertThat(transactionInfoDTO.getType()).isEqualTo(type);
+        assertThat(transactionInfoDTO.getAmount()).isEqualTo(amount);
+        assertThat(transactionInfoDTO.getStatus()).isEqualTo(status);
+        //Transaction are not refunded
+        assertThat(transactionInfoDTO.isRefund()).isFalse();
     }
 
     @Test
+    @DisplayName("voidTransactionById -> void transaction")
     void testVoidTransactionById() {
         //given
         String transactionId = "test-transaction-id";
@@ -144,11 +147,12 @@ class TransactionServiceImplUnitTest {
 
         //asserting
         verify(transactionGateway).voidTransaction(transactionId);
-        assertNotNull(result, "Transaction not found");
-        assertEquals(result, mockResult, "Transactions are different");
+        assertThat(result).as("Transaction not found").isNotNull();
+        assertThat(mockResult).as("Transactions are different").isEqualTo(result);
     }
 
     @Test
+    @DisplayName("cancelTransactionById -> cancel transaction")
     void testCancelTransactionById() {
         //given
         String transactionId = "test-transaction-id";
@@ -159,7 +163,7 @@ class TransactionServiceImplUnitTest {
 
         //asserting
         verify(transactionGateway).cancelRelease(transactionId);
-        assertNotNull(result, "Transaction not found");
-        assertEquals(result, mockResult, "Transactions are different");
+        assertThat(result).as("Transaction not found").isNotNull();
+        assertThat(mockResult).as("Transactions are different").isEqualTo(result);
     }
 }

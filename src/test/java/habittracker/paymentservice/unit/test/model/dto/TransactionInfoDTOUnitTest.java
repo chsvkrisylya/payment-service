@@ -11,9 +11,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.math.BigDecimal;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class TransactionInfoDTOUnitTest {
 
@@ -41,13 +39,13 @@ class TransactionInfoDTOUnitTest {
                 id, createdAt, type, amount, status, refundedTransactionId, isRefund);
 
         // Проверка значений через геттеры
-        assertEquals(id, dto.getId());
-        assertEquals(createdAt, dto.getCreatedAt());
-        assertEquals(type, dto.getType());
-        assertEquals(amount, dto.getAmount());
-        assertEquals(status, dto.getStatus());
-        assertEquals(refundedTransactionId, dto.getRefundedTransactionId());
-        assertTrue(dto.isRefund());
+        assertThat(dto.getId()).isEqualTo(id);
+        assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(dto.getType()).isEqualTo(type);
+        assertThat(dto.getAmount()).isEqualTo(amount);
+        assertThat(dto.getStatus()).isEqualTo(status);
+        assertThat(dto.getRefundedTransactionId()).isEqualTo(refundedTransactionId);
+        assertThat(dto.isRefund()).isTrue();
     }
 
     @Test
@@ -65,13 +63,13 @@ class TransactionInfoDTOUnitTest {
         dto.setRefundFlag("txn_67889");  // Вызываем метод для установки флага возврата
 
         // Проверка значений через геттеры
-        assertEquals("txn_67890", dto.getId());
-        assertEquals("2024-02-01T12:00:00Z", dto.getCreatedAt());
-        assertEquals(Transaction.Type.CREDIT, dto.getType());
-        assertEquals(new BigDecimal("50.00"), dto.getAmount());
-        assertEquals(Transaction.Status.SUBMITTED_FOR_SETTLEMENT, dto.getStatus());
-        assertEquals("txn_67889", dto.getRefundedTransactionId());
-        assertTrue(dto.isRefund());  // Проверяем, что флаг возврата установлен в true
+        assertThat(dto.getId()).isEqualTo("txn_67890");
+        assertThat(dto.getCreatedAt()).isEqualTo("2024-02-01T12:00:00Z");
+        assertThat(dto.getType()).isEqualTo(Transaction.Type.CREDIT);
+        assertThat(dto.getAmount()).isEqualTo(new BigDecimal("50.00"));
+        assertThat(dto.getStatus()).isEqualTo(Transaction.Status.SUBMITTED_FOR_SETTLEMENT);
+        assertThat(dto.getRefundedTransactionId()).isEqualTo("txn_67889");
+        assertThat(dto.isRefund()).isTrue();  // Проверяем, что флаг возврата установлен в true
     }
 
     @Test
@@ -81,14 +79,14 @@ class TransactionInfoDTOUnitTest {
                 "txn_12345", "2024-01-01T10:00:00Z", Transaction.Type.SALE,
                 new BigDecimal("100.00"), Transaction.Status.SETTLED, "txn_12344", false);
         dtoWithRefund.setRefundFlag("txn_12344");
-        assertTrue(dtoWithRefund.isRefund());  // Флаг возврата должен быть true
+        assertThat(dtoWithRefund.isRefund()).isTrue(); // Флаг возврата должен быть true
 
         // Проверка метода setRefundFlag, если refundedTransactionId равен null
         TransactionInfoDTO dtoWithoutRefund = new TransactionInfoDTO(
                 "txn_12346", "2024-01-02T11:00:00Z", Transaction.Type.SALE,
                 new BigDecimal("200.00"), Transaction.Status.SETTLED, null, false);
         dtoWithoutRefund.setRefundFlag(null);
-        assertFalse(dtoWithoutRefund.isRefund());  // Флаг возврата должен быть false
+        assertThat(dtoWithoutRefund.isRefund()).isFalse(); // Флаг возврата должен быть false
     }
 
     @Test
@@ -104,7 +102,7 @@ class TransactionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<TransactionInfoDTO>> violations = validator.validate(dto);
-        assertTrue(violations.isEmpty(), "DTO should pass validation");
+        assertThat(violations).isEmpty();
     }
 
     @Test
@@ -120,14 +118,20 @@ class TransactionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<TransactionInfoDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty(), "DTO should fail validation due to missing/invalid fields");
+        assertThat(violations).as("DTO should fail validation due to missing/invalid fields").isNotEmpty();
 
         // Проверяем конкретные ошибки
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Transaction ID cannot be blank")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Creation date cannot be blank")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Transaction type cannot be null")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Amount must be greater than zero")));
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Transaction status cannot be null")));
+
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Transaction ID cannot be blank"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Creation date cannot be blank"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Transaction type cannot be null"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Amount must be greater than zero"))).isTrue();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Transaction status cannot be null"))).isTrue();
     }
 
     @Test
@@ -143,7 +147,8 @@ class TransactionInfoDTOUnitTest {
         );
 
         Set<ConstraintViolation<TransactionInfoDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty(), "DTO should fail validation due to invalid amount");
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Amount must be greater than zero")));
-    }
+        assertThat(violations).as("DTO should fail validation due to invalid amount").isNotEmpty();
+        assertThat(violations.stream().anyMatch(v ->
+                v.getMessage().contains("Amount must be greater than zero"))).isTrue();
+     }
 }

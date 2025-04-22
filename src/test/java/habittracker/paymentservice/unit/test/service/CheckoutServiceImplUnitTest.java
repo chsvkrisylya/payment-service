@@ -3,9 +3,16 @@ package habittracker.paymentservice.unit.test.service;
 import com.braintreegateway.BraintreeGateway;
 import com.braintreegateway.ClientTokenGateway;
 import com.braintreegateway.Transaction;
+import com.braintreegateway.TransactionGateway;
+import com.braintreegateway.Result;
+import com.braintreegateway.ValidationError;
+import com.braintreegateway.ValidationErrors;
+import com.braintreegateway.ValidationErrorCode;
+import com.braintreegateway.TransactionRequest;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.service.CheckoutServiceImpl;
 import habittracker.paymentservice.service.util.NumFormatter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,12 +24,12 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CheckoutServiceImplUnitTest {
@@ -38,9 +45,20 @@ class CheckoutServiceImplUnitTest {
     @Mock
     private ClientTokenGateway mockClientTokenGateway;
 
+    @Mock
+    private TransactionGateway mockTransactionGateway;
+
+    @Mock
+    private Result<Transaction> expectedResult;
+
     // Сервис, который тестируем
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
+
+    @BeforeEach
+    void setUp() {
+        BraintreeData.setGateway(mockBraintreeGateway);
+    }
 
     // Тест 1: Проверка создания TransactionRequest с базовыми параметрами
     @Test
@@ -72,24 +90,27 @@ class CheckoutServiceImplUnitTest {
         when(numFormatter.stringToNum(invalidAmount, BigDecimal.class)).thenReturn(Optional.empty());
 
         // Проверка выброса исключения
-        NumberFormatException exception = assertThrows(NumberFormatException.class,
-                () -> checkoutService.getNewTransactionRequest(invalidAmount, paymentMethodNonce));
-        assertEquals("Некорректный формат суммы: " + invalidAmount, exception.getMessage());
+        assertThatThrownBy(() -> checkoutService.getNewTransactionRequest(invalidAmount, paymentMethodNonce))
+                .isInstanceOf(NumberFormatException.class)
+                .hasMessage("Некорректный формат суммы: " + invalidAmount);
     }
 
     // Тест 3: Проверка генерации нового клиентского токена
     @Test
     @DisplayName("Проверка генерации нового клиентского токена")
     void testGetNewClientToken() {
-        BraintreeData.gateway = mockBraintreeGateway;
+        BraintreeData.setGateway(mockBraintreeGateway);
         when(mockBraintreeGateway.clientToken()).thenReturn(mockClientTokenGateway);
 
         String expectedToken = "test-token";
         when(mockClientTokenGateway.generate()).thenReturn(expectedToken);
 
         String actualToken = checkoutService.getNewClientToken();
-        assertNotNull(actualToken, "Client token should not be null");
-        assertEquals(expectedToken, actualToken, "The generated client token should match the expected value");
+        assertThat(actualToken)
+                .as("The generated client token should match the expected value")
+                .isEqualTo(expectedToken)
+                .as("Client token should not be null")
+                .isNotNull();
     }
 
     // Тест 4: Проверка списка успешных статусов транзакции
@@ -97,19 +118,55 @@ class CheckoutServiceImplUnitTest {
     @DisplayName("Проверка списка успешных статусов транзакции")
     void testGetTransactionSuccessStatuses() {
         Transaction.Status[] statuses = checkoutService.getTransactionSuccessStatuses();
+        //There must be 7 status values and must not be null
+        assertThat(statuses).hasSize(7).isNotNull();
+        //Contain AUTHORIZED status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.AUTHORIZED);
+        //Contain AUTHORIZING status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.AUTHORIZING);
+        //Contain SETTLED status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.SETTLED);
+        //Contain SETTLEMENT_CONFIRMED status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.SETTLEMENT_CONFIRMED);
+        //Contain SETTLEMENT_PENDING status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.SETTLEMENT_PENDING);
+        //Contain SETTLING status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.SETTLING);
+        //Contain SUBMITTED_FOR_SETTLEMENT status
+        assertThat(Arrays.asList(statuses)).contains(Transaction.Status.SUBMITTED_FOR_SETTLEMENT);
+    }
 
-        assertNotNull(statuses, "Statuses should not be null");
-        assertEquals(7, statuses.length, "There should be 7 status values");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.AUTHORIZED), "Should contain AUTHORIZED status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.AUTHORIZING),
-                "Should contain AUTHORIZING status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.SETTLED), "Should contain SETTLED status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.SETTLEMENT_CONFIRMED),
-                "Should contain SETTLEMENT_CONFIRMED status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.SETTLEMENT_PENDING),
-                "Should contain SETTLEMENT_PENDING status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.SETTLING), "Should contain SETTLING status");
-        assertTrue(Arrays.asList(statuses).contains(Transaction.Status.SUBMITTED_FOR_SETTLEMENT),
-                "Should contain SUBMITTED_FOR_SETTLEMENT status");
+    @Test
+    @DisplayName("Проверка списка возвращаемых ошибок")
+    void testGetValidationErrorsShouldReturnErrors() {
+        var error1 = new ValidationError("amount",
+                ValidationErrorCode.SUBSCRIPTION_MODIFICATION_AMOUNT_CANNOT_BE_BLANK,
+                "Amount cannot be blank");
+        var error2 = new ValidationError("id",
+                ValidationErrorCode.CUSTOMER_ID_IS_TOO_LONG,
+                "Customer ID is too long");
+        ValidationErrors validationErrors = new ValidationErrors();
+        validationErrors.addError(error1);
+        validationErrors.addError(error2);
+        Result<Transaction> result = new Result<>(validationErrors);
+
+        String errors = checkoutService.getValidationErrors(result);
+        assertThat(errors)
+                .contains("Error: SUBSCRIPTION_MODIFICATION_AMOUNT_CANNOT_BE_BLANK: Amount cannot be blank")
+                .contains("Error: CUSTOMER_ID_IS_TOO_LONG: Customer ID is too long");
+    }
+
+    @Test
+    @DisplayName("Проверка создания успешной транзакции")
+    void testGetTransactionSaleSuccess() {
+        TransactionRequest request = new TransactionRequest();
+        when(mockBraintreeGateway.transaction()).thenReturn(mockTransactionGateway);
+        when(mockTransactionGateway.sale(request)).thenReturn(expectedResult);
+
+        Result<Transaction> result = checkoutService.getTransactionSale(request);
+
+        assertThat(result).isSameAs(expectedResult).isNotNull();
+
+        verify(mockTransactionGateway, times(1)).sale(request);
     }
 }
