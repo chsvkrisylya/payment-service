@@ -49,17 +49,17 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public Result<Plan> createPlan(PlanRequest request) {
-        return BraintreeData.getGateway().plan().create(request);
+        return BraintreeData.gateway.plan().create(request);
     }
 
     @Override
     public Result<Plan> createDefaultPlan() {
-        return BraintreeData.getGateway().plan().create(createDefaultPlanRequest());
+        return BraintreeData.gateway.plan().create(createDefaultPlanRequest());
     }
 
     @Override
     public List<Plan> getAllPlans() {
-        return BraintreeData.getGateway().plan().all();
+        return BraintreeData.gateway.plan().all();
     }
 
     @Override
@@ -70,7 +70,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public Optional<Plan> getPlanById(String id) {
         try {
-            return Optional.of(BraintreeData.getGateway().plan().find(id));
+            return Optional.of(BraintreeData.gateway.plan().find(id));
         } catch (NotFoundException e) {
             return Optional.empty();
         }
@@ -81,11 +81,11 @@ public class PlanServiceImpl implements PlanService {
         String id = getPlanByName(name).map(Plan::getId)
                 .orElseThrow(() -> new NotFoundException("План с именем '" + name + "' не найден."));
 
-        return BraintreeData.getGateway().plan().update(id, request);
+        return BraintreeData.gateway.plan().update(id, request);
     }
 
     @Override
     public Result<Plan> updatePlanById(String id, PlanRequest request) {
-        return BraintreeData.getGateway().plan().update(id, request);
+        return BraintreeData.gateway.plan().update(id, request);
     }
 }

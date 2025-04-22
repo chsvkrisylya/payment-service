@@ -73,7 +73,7 @@ class CheckoutServiceImplIT {
     public void setUp() {
         // Инициализация мока BraintreeData.gateway для теста
         BraintreeData.setGateway(mock(BraintreeGateway.class));
-        when(BraintreeData.getGateway().clientToken()).thenReturn(clientTokenGateway);
+        when(BraintreeData.gateway.clientToken()).thenReturn(clientTokenGateway);
     }
 
     @BeforeAll
@@ -100,7 +100,7 @@ class CheckoutServiceImplIT {
     @Test
     void testGetNewClientToken() {
         String expectedToken = "testClientToken";
-        when(BraintreeData.getGateway().clientToken().generate()).thenReturn(expectedToken);
+        when(BraintreeData.gateway.clientToken().generate()).thenReturn(expectedToken);
         String result = checkoutService.getNewClientToken();
         assertEquals(expectedToken, result);
         verify(clientTokenGateway, times(1)).generate();
@@ -156,7 +156,7 @@ class CheckoutServiceImplIT {
         when(result.getTarget()).thenReturn(testTransaction);
 
         TransactionGateway transactionGateway = mock(TransactionGateway.class);
-        when(BraintreeData.getGateway().transaction()).thenReturn(transactionGateway);
+        when(BraintreeData.gateway.transaction()).thenReturn(transactionGateway);
         when(transactionGateway.sale(request)).thenReturn(result);
 
         Result<Transaction> transactionResult = checkoutService.getTransactionSale(request);

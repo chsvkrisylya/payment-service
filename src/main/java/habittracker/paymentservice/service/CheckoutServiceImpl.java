@@ -20,7 +20,7 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public String getNewClientToken() {
-        return BraintreeData.getGateway().clientToken().generate();
+        return BraintreeData.gateway.clientToken().generate();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public Result<Transaction> getTransactionSale(TransactionRequest request) {
-        return BraintreeData.getGateway().transaction().sale(request);
+        return BraintreeData.gateway.transaction().sale(request);
     }
 
     @Override
