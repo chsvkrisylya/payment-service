@@ -71,12 +71,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Result<Subscription> createSubscription(SubscriptionRequest request) {
-        return BraintreeData.getGateway().subscription().create(request);
+        return BraintreeData.gateway.subscription().create(request);
     }
 
     @Override
     public Result<Subscription> createDefaultSubscription(String nonce) {
-        return BraintreeData.getGateway().subscription().create(getDefaultSubscriptionRequest(nonce));
+        return BraintreeData.gateway.subscription().create(getDefaultSubscriptionRequest(nonce));
     }
 
     @Override
@@ -84,7 +84,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SubscriptionSearchRequest searchRequest = new SubscriptionSearchRequest()
                 .merchantAccountId().is("habittracker");
 
-        ResourceCollection<Subscription> collection = BraintreeData.getGateway()
+        ResourceCollection<Subscription> collection = BraintreeData.gateway
                 .subscription()
                 .search(searchRequest);
 
@@ -125,22 +125,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription findSubscriptionById(String id) {
-        return BraintreeData.getGateway().subscription().find(id);
+        return BraintreeData.gateway.subscription().find(id);
     }
 
     @Override
     public Result<Subscription> updateSubscription(String id, SubscriptionRequest request) {
-        return BraintreeData.getGateway().subscription().update(id, request);
+        return BraintreeData.gateway.subscription().update(id, request);
     }
 
     @Override
     public Result<Subscription> cancelSubscription(String id) {
-        return BraintreeData.getGateway().subscription().cancel(id);
+        return BraintreeData.gateway.subscription().cancel(id);
     }
 
     @Override
     public Result<Subscription> deleteSubscription(String customerId, String id) {
-        return BraintreeData.getGateway().subscription().delete(customerId, id);
+        return BraintreeData.gateway.subscription().delete(customerId, id);
     }
 
     private String formatDate(Calendar date) {

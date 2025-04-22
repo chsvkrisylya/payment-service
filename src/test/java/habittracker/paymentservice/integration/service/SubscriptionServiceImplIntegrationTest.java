@@ -90,18 +90,18 @@ class SubscriptionServiceImplIntegrationTest {
 
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
-        BraintreeData.getGateway().customer()
+        BraintreeData.gateway.customer()
                 .create(new CustomerRequest().id("TestCustomer")
                         .paymentMethodNonce(TEST_NONCE).creditCard().token("Valid-token").done());
 
-        BraintreeData.getGateway().plan()
+        BraintreeData.gateway.plan()
                 .create(new PlanRequest().id(TEST_PLAN_ID)
                         .name(TEST_PLAN_NAME).price(new BigDecimal(TEST_PRICE)).numberOfBillingCycles(TEST_CYCLES));
     }
 
     @AfterAll
     static void tearDown() {
-        BraintreeData.getGateway().customer().delete("TestCustomer");
+        BraintreeData.gateway.customer().delete("TestCustomer");
     }
 
     @Nested
@@ -221,7 +221,7 @@ class SubscriptionServiceImplIntegrationTest {
         }
 
         String getValidPaymentNonce() {
-            return BraintreeData.getGateway().paymentMethodNonce()
+            return BraintreeData.gateway.paymentMethodNonce()
                     .create("Valid-token")
                     .getTarget()
                     .getNonce();
