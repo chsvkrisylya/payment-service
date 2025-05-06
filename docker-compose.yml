@@ -1,14 +1,33 @@
-version: '3.8'
-
 services:
+
   payment-service-db:
     image: postgres:16
     restart: always
-    env_file:
-      - ./.env
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       POSTGRES_USER: ${PAYMENT_SERVICE_DB_USER}
       POSTGRES_PASSWORD: ${PAYMENT_SERVICE_DB_PASSWORD}
       POSTGRES_DB: ${PAYMENT_SERVICE_DB_NAME}
     ports:
       - "${PAYMENT_SERVICE_DB_PORT}:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${PAYMENT_SERVICE_DB_USER}", "-d", "${PAYMENT_SERVICE_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    env_file:
+      - .env
+    networks:
+      - infrastructure_default
+
+networks:
+  infrastructure_default:
+    external: true
