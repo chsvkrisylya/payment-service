@@ -101,7 +101,7 @@ tasks.withType(JavaCompile) {
 
 springBoot {
     buildInfo()
-    mainClass = 'habittracker.userservice.PaymentServiceApplication'
+    mainClass = 'habittracker.paymentservice.PaymentServiceApplication'
 }
 
 // Конфигурация JaCoCo
@@ -110,6 +110,31 @@ jacoco {
 }
 
 tasks.named('test') {
+    useJUnitPlatform()
+}
+
+test {
+    // Определяем, какой .env файл использовать через переменную окружения ENV (по умолчанию test)
+    def envFile = System.getenv('ENV') ?: 'test'
+    def dotenvFilePath = ".env.${envFile}"
+
+    doFirst {
+        // Проверяем, существует ли файл
+        def file = new File(dotenvFilePath)
+        if (!file.exists()) {
+            throw new GradleException("Environment file ${dotenvFilePath} not found")
+        }
+
+        // Читаем файл .env
+        file.readLines().each { line ->
+            // Пропускаем пустые строки и комментарии
+            if (line.trim() && !line.startsWith('#')) {
+                def (key, value) = line.split('=', 2)
+                // Добавляем переменную в окружение тестов
+                environment key.trim(), value.trim()
+            }
+        }
+    }
     useJUnitPlatform()
 }
 

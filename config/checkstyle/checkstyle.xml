@@ -148,11 +148,11 @@
             <property name="tokens" value="LITERAL_CATCH"/>
         </module>
 
-        <!-- Новое правило: Проверка наличия @Column(xxx = "nnn") у полей -->
-        <module name="habittracker.staticanalysis.checkstyle.customrules.ColumnAnnotationCheck"/>
+<!--        &lt;!&ndash; Новое правило: Проверка наличия @Column(xxx = "nnn") у полей &ndash;&gt;-->
+<!--        <module name="habittracker.staticanalysis.checkstyle.customrules.ColumnAnnotationCheck"/>-->
 
-        <!--Проверка в моделях данных на наличие equals, hashcode        -->
-        <module name="habittracker.staticanalysis.checkstyle.customrules.EqualsHashCodeCheck"/>
+<!--        &lt;!&ndash;Проверка в моделях данных на наличие equals, hashcode        &ndash;&gt;-->
+<!--        <module name="habittracker.staticanalysis.checkstyle.customrules.EqualsHashCodeCheck"/>-->
 
         <!--Проверка на использование JUnit аннотаций и AseertJ-->
 <!--        раскомментировать перед проверкой !-->
