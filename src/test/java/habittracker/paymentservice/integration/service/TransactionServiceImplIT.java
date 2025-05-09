@@ -25,15 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
-import java.io.File;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Calendar;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -75,18 +73,17 @@ class TransactionServiceImplIT {
 
     @BeforeAll
     static void loadEnv() {
-        String wiremockHost = System.getProperty("WIREMOCK_HOST", "localhost");
-        int wiremockPort = Integer.parseInt(System.getProperty("WIREMOCK_PORT", "8081"));
-        wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(wiremockPort));
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
         wireMockServer.start();
-        WireMock.configureFor(wiremockHost, wiremockPort);
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        WireMock.configureFor("localhost", wireMockServer.port());
+        String dotenvPath = System.getProperty("user.dir");
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")
                 .load();
 
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        System.setProperty("WIREMOCK_PORT", String.valueOf(wireMockServer.port()));
     }
 
     @AfterAll
@@ -118,53 +115,54 @@ class TransactionServiceImplIT {
 
     @Test
     void testGetTransactionsBySearchRequest() {
+        // 1. Настройка mock Gateway с динамическим портом WireMock
         BraintreeGateway mockGateway = new BraintreeGateway(
                 new Environment(
-                        "http://localhost:8081", // baseURL
-                        "http://localhost:8081", // authURL
-                        new String[] {},         // Пустой массив сертификатов
-                        "TEST_ENV"               // Имя окружения (можно любое)
+                        "http://localhost:" + wireMockServer.port(),
+                        "http://localhost:" + wireMockServer.port(),
+                        new String[]{},
+                        "TEST_ENV"
                 ),
-                "fake_merchant_id",
+                "integration_merchant_id",
                 "fake_public_key",
                 "fake_private_key"
         );
         BraintreeData.setGateway(mockGateway);
-        Transaction mockTransaction = mock(Transaction.class);
-        LocalDate timestamp = LocalDate.now();
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(timestamp.getYear(), timestamp.getMonthValue() - 1, timestamp.getDayOfMonth());
 
-        when(mockTransaction.getId()).thenReturn("txn_123");
-        when(mockTransaction.getCreatedAt()).thenReturn(calendar);
-
+        // 2. Настройка заглушек для аутентификации
         stubFor(post(urlPathMatching("/merchants/.*/transactions/advanced_search_ids"))
+                .withHeader("Authorization", containing("Basic"))
                 .willReturn(aResponse()
+                        .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
                         .withBody(
                                 "<search-results>"
-                                        + "    <page-size>50</page-size>"
-                                        + "    <ids>"
-                                        + "        <item>txn_123</item>"
-                                        + "    </ids>"
+                                        + "<page-size>50</page-size>"
+                                        + "<ids>"
+                                        + "<item>txn_123</item>"
+                                        + "</ids>"
                                         + "</search-results>"
                         )));
 
         stubFor(post(urlPathMatching("/merchants/.*/transactions/advanced_search"))
+                .withHeader("Authorization", containing("Basic"))
                 .willReturn(aResponse()
+                        .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
                         .withBody(
                                 "<credit-card-transactions>"
-                                        + "    <transaction>"
-                                        + "        <id>txn_123</id>"
-                                        + "        <amount>100</amount>"
-                                        + "        <status>SETTLED</status>"
-                                        + "    </transaction>"
+                                        + "<transaction>"
+                                        + "<id>txn_123</id>"
+                                        + "<amount>100</amount>"
+                                        + "<status>SETTLED</status>"
+                                        + "</transaction>"
                                         + "</credit-card-transactions>"
                         )));
 
+        // 3. Вызов тестируемого метода
         List<TransactionInfoDTO> transactions = transactionService.getTransactionsBySearchRequest();
 
+        // 4. Проверки
         assertNotNull(transactions, "Transactions list should not be null");
         assertEquals(1, transactions.size(), "Transactions list size should be 1");
 
@@ -172,7 +170,6 @@ class TransactionServiceImplIT {
         assertEquals("txn_123", transactionInfo.getId(), "Transaction ID should match");
         assertEquals(BigDecimal.valueOf(100), transactionInfo.getAmount(), "Transaction amount should match");
         assertEquals(Transaction.Status.SETTLED, transactionInfo.getStatus(), "Transaction status should match");
-
     }
 
     @Test

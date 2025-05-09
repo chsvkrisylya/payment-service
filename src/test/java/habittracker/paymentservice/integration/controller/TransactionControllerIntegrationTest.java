@@ -20,7 +20,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.File;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -56,7 +55,7 @@ class TransactionControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
