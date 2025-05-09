@@ -1,11 +1,13 @@
 package habittracker.paymentservice.integration.service;
 
-import com.braintreegateway.CustomerRequest;
-import com.braintreegateway.PlanRequest;
-import com.braintreegateway.Subscription;
-import com.braintreegateway.SubscriptionRequest;
 import com.braintreegateway.Result;
 import com.braintreegateway.Plan;
+import com.braintreegateway.Subscription;
+import com.braintreegateway.SubscriptionRequest;
+import com.braintreegateway.BraintreeGateway;
+import com.braintreegateway.CustomerRequest;
+import com.braintreegateway.Environment;
+import com.braintreegateway.PlanRequest;
 import com.braintreegateway.exceptions.NotFoundException;
 import habittracker.paymentservice.model.BraintreeData;
 import habittracker.paymentservice.model.dto.SubscriptionInfoDTO;
@@ -31,7 +33,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.org.apache.commons.lang3.reflect.FieldUtils;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -82,13 +83,20 @@ class SubscriptionServiceImplIntegrationTest {
 
     @BeforeAll
     static void loadEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.dev")
                 .load();
 
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+
+        BraintreeData.setGateway(new BraintreeGateway(
+                Environment.SANDBOX,
+                System.getProperty("BRAINTREE_MERCHANT_ID"),
+                System.getProperty("BRAINTREE_PUBLIC_KEY"),
+                System.getProperty("BRAINTREE_PRIVATE_KEY")
+        ));
 
         BraintreeData.gateway.customer()
                 .create(new CustomerRequest().id("TestCustomer")

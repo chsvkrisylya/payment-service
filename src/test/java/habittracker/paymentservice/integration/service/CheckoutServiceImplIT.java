@@ -1,6 +1,5 @@
 package habittracker.paymentservice.integration.service;
 
-
 import com.braintreegateway.BraintreeGateway;
 import com.braintreegateway.Transaction;
 import com.braintreegateway.Result;
@@ -30,10 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
-
-import java.io.File;
 import java.util.List;
-
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -83,7 +79,7 @@ class CheckoutServiceImplIT {
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(wiremockPort));
         wireMockServer.start();
         WireMock.configureFor(wiremockHost, wiremockPort);
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")

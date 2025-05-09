@@ -27,7 +27,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +76,7 @@ class PlanControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)

@@ -20,7 +20,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
-import java.io.File;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,7 +75,7 @@ class PlanServiceImplIT {
     @BeforeAll
     static void loadEnv() {
         // Загружаем переменные окружения
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
                 .filename(".env.local")

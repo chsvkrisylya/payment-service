@@ -19,8 +19,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.io.File;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -52,7 +50,7 @@ class CheckoutControllerIntegrationTest {
 
     @BeforeAll
     static void localEnv() {
-        String dotenvPath = new File(System.getProperty("user.dir")).getParent();
+        String dotenvPath = System.getProperty("user.dir");
 
         Dotenv dotenv = Dotenv.configure()
                 .directory(dotenvPath)
